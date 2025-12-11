@@ -20,16 +20,16 @@ import (
 
 // Models
 type PlayerRanking struct {
-	ID            uint      `gorm:"primaryKey" json:"id"`
-	PlayerID      uint      `gorm:"unique;not null;index" json:"player_id"`
-	Username      string    `json:"username"`
-	TotalPoints   int       `gorm:"default:1000;index" json:"total_points"`
-	TotalBattles  int       `gorm:"default:0" json:"total_battles"`
-	Wins          int       `gorm:"default:0" json:"wins"`
-	Losses        int       `gorm:"default:0" json:"losses"`
-	WinRate       float64   `json:"win_rate"`
-	Rank          int       `json:"rank"`
-	UpdatedAt     time.Time `json:"updated_at"`
+	ID           uint      `gorm:"primaryKey" json:"id"`
+	PlayerID     uint      `gorm:"unique;not null;index" json:"player_id"`
+	Username     string    `json:"username"`
+	TotalPoints  int       `gorm:"default:1000;index" json:"total_points"`
+	TotalBattles int       `gorm:"default:0" json:"total_battles"`
+	Wins         int       `gorm:"default:0" json:"wins"`
+	Losses       int       `gorm:"default:0" json:"losses"`
+	WinRate      float64   `json:"win_rate"`
+	Rank         int       `json:"rank"`
+	UpdatedAt    time.Time `json:"updated_at"`
 }
 
 type LeaderboardEntry struct {
@@ -170,11 +170,11 @@ func consumeBattleEvents() {
 
 	for msg := range msgs {
 		log.Printf("Received event: %s", msg.RoutingKey)
-		
+
 		if msg.RoutingKey == "battle.completed" {
 			handleBattleCompleted(msg.Body)
 		}
-		
+
 		msg.Ack(false)
 	}
 }
@@ -191,7 +191,7 @@ func handleBattleCompleted(body []byte) {
 	pointsWon := int(event["points_won"].(float64))
 	pointsLost := int(event["points_lost"].(float64))
 
-	log.Printf("Processing battle: Winner=%d (+%d), Loser=%d (-%d)", 
+	log.Printf("Processing battle: Winner=%d (+%d), Loser=%d (-%d)",
 		winnerID, pointsWon, loserID, pointsLost)
 
 	// Update winner
@@ -218,9 +218,9 @@ func updatePlayerRanking(playerID uint, pointsDelta int, isWin bool) {
 		}
 
 		ranking = PlayerRanking{
-			PlayerID:    playerID,
-			Username:    player.Username,
-			TotalPoints: player.Points + pointsDelta,
+			PlayerID:     playerID,
+			Username:     player.Username,
+			TotalPoints:  player.Points + pointsDelta,
 			TotalBattles: 1,
 		}
 
@@ -232,7 +232,7 @@ func updatePlayerRanking(playerID uint, pointsDelta int, isWin bool) {
 	} else {
 		ranking.TotalPoints += pointsDelta
 		ranking.TotalBattles++
-		
+
 		if isWin {
 			ranking.Wins++
 		} else {
@@ -246,7 +246,7 @@ func updatePlayerRanking(playerID uint, pointsDelta int, isWin bool) {
 	}
 
 	db.Save(&ranking)
-	log.Printf("Updated ranking for player %d: Points=%d, W/L=%d/%d", 
+	log.Printf("Updated ranking for player %d: Points=%d, W/L=%d/%d",
 		playerID, ranking.TotalPoints, ranking.Wins, ranking.Losses)
 }
 
@@ -269,7 +269,7 @@ func updateRedisLeaderboard(playerID uint, pointsDelta int) {
 		Member: fmt.Sprintf("%d", playerID),
 	})
 
-	log.Printf("Updated Redis leaderboard for player %d: %f -> %f", 
+	log.Printf("Updated Redis leaderboard for player %d: %f -> %f",
 		playerID, currentScore, newScore)
 }
 
@@ -286,13 +286,13 @@ func getLeaderboard(w http.ResponseWriter, r *http.Request) {
 	result, err := redisClient.ZRevRangeWithScores(ctx, "leaderboard", 0, int64(limit-1)).Result()
 	if err == nil && len(result) > 0 {
 		leaderboard := make([]LeaderboardEntry, 0, len(result))
-		
+
 		for i, z := range result {
 			playerID, _ := strconv.ParseUint(z.Member.(string), 10, 64)
-			
+
 			var ranking PlayerRanking
 			db.Where("player_id = ?", playerID).First(&ranking)
-			
+
 			leaderboard = append(leaderboard, LeaderboardEntry{
 				PlayerID:    uint(playerID),
 				Username:    ranking.Username,
@@ -303,7 +303,7 @@ func getLeaderboard(w http.ResponseWriter, r *http.Request) {
 				Rank:        i + 1,
 			})
 		}
-		
+
 		respondJSON(w, http.StatusOK, leaderboard)
 		return
 	}
@@ -387,7 +387,7 @@ func performRankingSync() {
 // Helper Functions
 func fetchPlayerInfo(playerID uint) *Player {
 	url := fmt.Sprintf("%s/players/%d", os.Getenv("PLAYER_SERVICE_URL"), playerID)
-	
+
 	resp, err := http.Get(url)
 	if err != nil {
 		log.Printf("Error fetching player %d: %v", playerID, err)
@@ -396,7 +396,7 @@ func fetchPlayerInfo(playerID uint) *Player {
 	defer resp.Body.Close()
 
 	body, _ := io.ReadAll(resp.Body)
-	
+
 	var player Player
 	if err := json.Unmarshal(body, &player); err != nil {
 		return nil

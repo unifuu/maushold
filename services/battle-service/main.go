@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -21,17 +20,17 @@ import (
 
 // Models
 type Battle struct {
-	ID          uint      `gorm:"primaryKey" json:"id"`
-	Player1ID   uint      `gorm:"not null;index" json:"player1_id"`
-	Player2ID   uint      `gorm:"not null;index" json:"player2_id"`
-	Pokemon1ID  uint      `gorm:"not null" json:"pokemon1_id"`
-	Pokemon2ID  uint      `gorm:"not null" json:"pokemon2_id"`
-	WinnerID    uint      `json:"winner_id"`
-	Status      string    `gorm:"default:'pending'" json:"status"` // pending, in_progress, completed
-	BattleLog   string    `gorm:"type:text" json:"battle_log"`
-	PointsWon   int       `json:"points_won"`
-	PointsLost  int       `json:"points_lost"`
-	CreatedAt   time.Time `json:"created_at"`
+	ID          uint       `gorm:"primaryKey" json:"id"`
+	Player1ID   uint       `gorm:"not null;index" json:"player1_id"`
+	Player2ID   uint       `gorm:"not null;index" json:"player2_id"`
+	Pokemon1ID  uint       `gorm:"not null" json:"pokemon1_id"`
+	Pokemon2ID  uint       `gorm:"not null" json:"pokemon2_id"`
+	WinnerID    uint       `json:"winner_id"`
+	Status      string     `gorm:"default:'pending'" json:"status"` // pending, in_progress, completed
+	BattleLog   string     `gorm:"type:text" json:"battle_log"`
+	PointsWon   int        `json:"points_won"`
+	PointsLost  int        `json:"points_lost"`
+	CreatedAt   time.Time  `json:"created_at"`
 	CompletedAt *time.Time `json:"completed_at"`
 }
 
@@ -54,8 +53,8 @@ type PlayerPokemon struct {
 }
 
 type Player struct {
-	ID     uint   `json:"id"`
-	Points int    `json:"points"`
+	ID       uint   `json:"id"`
+	Points   int    `json:"points"`
 	Username string `json:"username"`
 }
 
@@ -70,7 +69,7 @@ var (
 
 func main() {
 	rand.Seed(time.Now().UnixNano())
-	
+
 	initDB()
 	initRedis()
 	initRabbitMQ()
@@ -197,7 +196,7 @@ func createBattle(w http.ResponseWriter, r *http.Request) {
 
 	// Simulate battle
 	winner, battleLog := simulateBattle(pokemon1, pokemon2)
-	
+
 	// Determine winner
 	if winner == 1 {
 		battle.WinnerID = req.Player1ID
@@ -324,15 +323,15 @@ func calculateDamage(attack, defense int) int {
 	if baseDamage < 1 {
 		baseDamage = 1
 	}
-	
+
 	// Add some randomness
 	variance := rand.Intn(10) - 5
 	damage := baseDamage + variance
-	
+
 	if damage < 1 {
 		damage = 1
 	}
-	
+
 	return damage
 }
 
@@ -346,7 +345,7 @@ func maxInt(a, b int) int {
 // Helper Functions
 func fetchPlayerPokemon(playerID, pokemonID uint) (*PlayerPokemon, error) {
 	url := fmt.Sprintf("%s/players/%d/pokemon", os.Getenv("PLAYER_SERVICE_URL"), playerID)
-	
+
 	resp, err := http.Get(url)
 	if err != nil {
 		return nil, err
@@ -354,7 +353,7 @@ func fetchPlayerPokemon(playerID, pokemonID uint) (*PlayerPokemon, error) {
 	defer resp.Body.Close()
 
 	body, _ := io.ReadAll(resp.Body)
-	
+
 	var pokemons []PlayerPokemon
 	if err := json.Unmarshal(body, &pokemons); err != nil {
 		return nil, err
@@ -387,7 +386,7 @@ func publishBattleEvent(battle Battle) {
 		ContentType: "application/json",
 		Body:        body,
 	})
-	
+
 	if err != nil {
 		log.Printf("Failed to publish battle event: %v", err)
 	} else {

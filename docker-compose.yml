@@ -153,7 +153,7 @@ services:
 
   # Frontend
   frontend:
-    build: ./frontend
+    build: ./frontend/maushold-react
     ports:
       - "3000:3000"
     environment:
