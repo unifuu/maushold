@@ -11,7 +11,6 @@ import (
 
 	"github.com/go-redis/redis/v8"
 	"github.com/gorilla/mux"
-	"github.com/lib/pq"
 	"github.com/streadway/amqp"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -62,7 +61,7 @@ func main() {
 
 	// Setup router
 	r := mux.NewRouter()
-	
+
 	// Routes
 	r.HandleFunc("/players", createPlayer).Methods("POST")
 	r.HandleFunc("/players/{id}", getPlayer).Methods("GET")
@@ -119,7 +118,7 @@ func initRedis() {
 func initRabbitMQ() {
 	var err error
 	rabbitURL := os.Getenv("RABBITMQ_URL")
-	
+
 	rabbitConn, err = amqp.Dial(rabbitURL)
 	if err != nil {
 		log.Fatal("Failed to connect to RabbitMQ:", err)
@@ -299,7 +298,7 @@ func consumeMessages() {
 
 	for msg := range msgs {
 		log.Printf("Received message: %s", msg.RoutingKey)
-		
+
 		switch msg.RoutingKey {
 		case "battle.completed":
 			handleBattleCompleted(msg.Body)
@@ -345,12 +344,12 @@ func corsMiddleware(next http.Handler) http.Handler {
 		w.Header().Set("Access-Control-Allow-Origin", "*")
 		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
 		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
-		
+
 		if r.Method == "OPTIONS" {
 			w.WriteHeader(http.StatusOK)
 			return
 		}
-		
+
 		next.ServeHTTP(w, r)
 	})
 }
