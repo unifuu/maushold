@@ -3,7 +3,7 @@ package routes
 import (
 	"net/http"
 
-	"player-service/handler"
+	"maushold/player-service/handler"
 
 	"github.com/gorilla/mux"
 )

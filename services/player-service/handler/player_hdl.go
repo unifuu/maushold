@@ -5,9 +5,9 @@ import (
 	"net/http"
 	"strconv"
 
-	"player-service/messaging"
-	"player-service/model"
-	"player-service/service"
+	"maushold/player-service/messaging"
+	"maushold/player-service/model"
+	"maushold/player-service/service"
 
 	"github.com/gorilla/mux"
 )

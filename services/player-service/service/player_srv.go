@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"time"
 
-	"player-service/model"
-	"player-service/repository"
+	"maushold/player-service/model"
+	"maushold/player-service/repository"
 
 	"github.com/go-redis/redis/v8"
 )

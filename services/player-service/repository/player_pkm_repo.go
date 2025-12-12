@@ -1,7 +1,7 @@
 package repository
 
 import (
-	"player-service/model"
+	"maushold/player-service/model"
 
 	"gorm.io/gorm"
 )

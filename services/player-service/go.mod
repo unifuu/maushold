@@ -1,4 +1,4 @@
-module player-service
+module maushold/player-service
 
 go 1.25.3
 

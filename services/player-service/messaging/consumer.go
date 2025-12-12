@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"log"
 
-	"player-service/service"
+	"maushold/player-service/service"
 
 	"github.com/streadway/amqp"
 )

@@ -5,12 +5,12 @@ import (
 	"net/http"
 	"os"
 
-	"player-service/config"
-	"player-service/handler"
-	"player-service/messaging"
-	"player-service/repository"
-	"player-service/routes"
-	"player-service/service"
+	"maushold/player-service/config"
+	"maushold/player-service/handler"
+	"maushold/player-service/messaging"
+	"maushold/player-service/repository"
+	"maushold/player-service/routes"
+	"maushold/player-service/service"
 
 	"github.com/gorilla/mux"
 )

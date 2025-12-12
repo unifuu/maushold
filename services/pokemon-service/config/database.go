@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"log"
 
-	"maushold/player-service/model"
+	"maushold/pokemon-service/model"
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -20,7 +20,7 @@ func InitDB(cfg *Config) *gorm.DB {
 	}
 
 	// Auto migrate
-	err = db.AutoMigrate(&model.Player{}, &model.PlayerPokemon{})
+	err = db.AutoMigrate(&model.Pokemon{})
 	if err != nil {
 		log.Fatal("Failed to migrate database:", err)
 	}
