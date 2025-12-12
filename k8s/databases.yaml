@@ -1,0 +1,232 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: player-db
+  namespace: maushold
+spec:
+  selector:
+    app: player-db
+  ports:
+    - port: 5432
+      targetPort: 5432
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: player-db
+  namespace: maushold
+spec:
+  serviceName: player-db
+  replicas: 1
+  selector:
+    matchLabels:
+      app: player-db
+  template:
+    metadata:
+      labels:
+        app: player-db
+    spec:
+      containers:
+      - name: postgres
+        image: postgres:15-alpine
+        ports:
+        - containerPort: 5432
+        env:
+        - name: POSTGRES_DB
+          value: "player_db"
+        - name: POSTGRES_USER
+          valueFrom:
+            secretKeyRef:
+              name: maushold-secrets
+              key: DB_USER
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: maushold-secrets
+              key: DB_PASSWORD
+        volumeMounts:
+        - name: player-db-data
+          mountPath: /var/lib/postgresql/data
+  volumeClaimTemplates:
+  - metadata:
+      name: player-db-data
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 1Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pokemon-db
+  namespace: maushold
+spec:
+  selector:
+    app: pokemon-db
+  ports:
+    - port: 5432
+      targetPort: 5432
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: pokemon-db
+  namespace: maushold
+spec:
+  serviceName: pokemon-db
+  replicas: 1
+  selector:
+    matchLabels:
+      app: pokemon-db
+  template:
+    metadata:
+      labels:
+        app: pokemon-db
+    spec:
+      containers:
+      - name: postgres
+        image: postgres:15-alpine
+        ports:
+        - containerPort: 5432
+        env:
+        - name: POSTGRES_DB
+          value: "pokemon_db"
+        - name: POSTGRES_USER
+          valueFrom:
+            secretKeyRef:
+              name: maushold-secrets
+              key: DB_USER
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: maushold-secrets
+              key: DB_PASSWORD
+        volumeMounts:
+        - name: pokemon-db-data
+          mountPath: /var/lib/postgresql/data
+  volumeClaimTemplates:
+  - metadata:
+      name: pokemon-db-data
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 1Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: battle-db
+  namespace: maushold
+spec:
+  selector:
+    app: battle-db
+  ports:
+    - port: 5432
+      targetPort: 5432
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: battle-db
+  namespace: maushold
+spec:
+  serviceName: battle-db
+  replicas: 1
+  selector:
+    matchLabels:
+      app: battle-db
+  template:
+    metadata:
+      labels:
+        app: battle-db
+    spec:
+      containers:
+      - name: postgres
+        image: postgres:15-alpine
+        ports:
+        - containerPort: 5432
+        env:
+        - name: POSTGRES_DB
+          value: "battle_db"
+        - name: POSTGRES_USER
+          valueFrom:
+            secretKeyRef:
+              name: maushold-secrets
+              key: DB_USER
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: maushold-secrets
+              key: DB_PASSWORD
+        volumeMounts:
+        - name: battle-db-data
+          mountPath: /var/lib/postgresql/data
+  volumeClaimTemplates:
+  - metadata:
+      name: battle-db-data
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 1Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ranking-db
+  namespace: maushold
+spec:
+  selector:
+    app: ranking-db
+  ports:
+    - port: 5432
+      targetPort: 5432
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: ranking-db
+  namespace: maushold
+spec:
+  serviceName: ranking-db
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ranking-db
+  template:
+    metadata:
+      labels:
+        app: ranking-db
+    spec:
+      containers:
+      - name: postgres
+        image: postgres:15-alpine
+        ports:
+        - containerPort: 5432
+        env:
+        - name: POSTGRES_DB
+          value: "ranking_db"
+        - name: POSTGRES_USER
+          valueFrom:
+            secretKeyRef:
+              name: maushold-secrets
+              key: DB_USER
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: maushold-secrets
+              key: DB_PASSWORD
+        volumeMounts:
+        - name: ranking-db-data
+          mountPath: /var/lib/postgresql/data
+  volumeClaimTemplates:
+  - metadata:
+      name: ranking-db-data
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 1Gi
+---

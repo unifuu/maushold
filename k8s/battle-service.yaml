@@ -1,0 +1,74 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: battle-service
+  namespace: maushold
+spec:
+  selector:
+    app: battle-service
+  ports:
+    - port: 8003
+      targetPort: 8003
+      nodePort: 30003
+  type: NodePort
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: battle-service
+  namespace: maushold
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: battle-service
+  template:
+    metadata:
+      labels:
+        app: battle-service
+    spec:
+      containers:
+      - name: battle-service
+        image: maushold/battle-service:latest
+        imagePullPolicy: Never
+        ports:
+        - containerPort: 8003
+        env:
+        - name: DB_HOST
+          value: "battle-db"
+        - name: DB_PORT
+          value: "5432"
+        - name: DB_NAME
+          value: "battle_db"
+        - name: DB_USER
+          valueFrom:
+            secretKeyRef:
+              name: maushold-secrets
+              key: DB_USER
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: maushold-secrets
+              key: DB_PASSWORD
+        - name: SERVICE_PORT
+          value: "8003"
+        - name: PLAYER_SERVICE_URL
+          value: "http://player-service:8001"
+        - name: POKEMON_SERVICE_URL
+          value: "http://pokemon-service:8002"
+        envFrom:
+        - configMapRef:
+            name: maushold-config
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8003
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8003
+          initialDelaySeconds: 20
+          periodSeconds: 5
+---

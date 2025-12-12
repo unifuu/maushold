@@ -89,9 +89,6 @@ func (h *PlayerHandler) UpdatePlayer(w http.ResponseWriter, r *http.Request) {
 	if username, ok := updates["username"].(string); ok {
 		player.Username = username
 	}
-	if email, ok := updates["email"].(string); ok {
-		player.Email = email
-	}
 
 	if err := h.playerService.UpdatePlayer(player); err != nil {
 		respondError(w, http.StatusInternalServerError, err.Error())

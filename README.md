@@ -1,10 +1,10 @@
 # Maushold
 
-<p align="center" style="text-align: left">
-    <img src="./assets/maushold.png" width="10%">
+<p align="left">
+    <img src="https://github.com/unifuu/rotom/blob/main/assets/maushold.png?raw=true" width="10%">
 </p>
 
-Tryna make a microservice system.
+Tryna make a microservices demo.
 
 ## Project Strucrture
 
@@ -17,4 +17,11 @@ Tryna make a microservice system.
 ├── frontend/
 |   ├── maushold-react/
 ├── docker-compose.yml
+```
+
+## Build
+
+``` bash
+make setup
+make dev
 ```

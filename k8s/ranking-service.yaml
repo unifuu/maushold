@@ -1,0 +1,71 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: ranking-service
+  namespace: maushold
+spec:
+  selector:
+    app: ranking-service
+  ports:
+    - port: 8004
+      targetPort: 8004
+      nodePort: 30004
+  type: NodePort
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ranking-service
+  namespace: maushold
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: ranking-service
+  template:
+    metadata:
+      labels:
+        app: ranking-service
+    spec:
+      containers:
+      - name: ranking-service
+        image: maushold/ranking-service:latest
+        imagePullPolicy: Never
+        ports:
+        - containerPort: 8004
+        env:
+        - name: DB_HOST
+          value: "ranking-db"
+        - name: DB_PORT
+          value: "5432"
+        - name: DB_NAME
+          value: "ranking_db"
+        - name: DB_USER
+          valueFrom:
+            secretKeyRef:
+              name: maushold-secrets
+              key: DB_USER
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: maushold-secrets
+              key: DB_PASSWORD
+        - name: SERVICE_PORT
+          value: "8004"
+        - name: PLAYER_SERVICE_URL
+          value: "http://player-service:8001"
+        envFrom:
+        - configMapRef:
+            name: maushold-config
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8004
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8004
+          initialDelaySeconds: 20
+          periodSeconds: 5

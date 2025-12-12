@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: maushold-config
+  namespace: maushold
+data:
+  CONSUL_ADDR: "consul:8500"
+  REDIS_HOST: "redis:6379"
+  RABBITMQ_URL: "amqp://guest:guest@rabbitmq:5672/"
