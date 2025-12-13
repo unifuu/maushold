@@ -10,7 +10,6 @@ const API = {
 interface Player {
   id: number;
   username: string;
-  email: string;
   points: number;
   created_at: string;
   updated_at: string;
@@ -100,12 +99,12 @@ export default function MausholdApp() {
     }
   };
 
-  const createPlayer = async (username: string, email: string) => {
+  const createPlayer = async (username: string) => {
     try {
       const response = await fetch(`${API.PLAYER}/players`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, email })
+        body: JSON.stringify({ username })
       });
       const newPlayer: Player = await response.json();
       setPlayers([...players, newPlayer]);
@@ -230,21 +229,19 @@ export default function MausholdApp() {
 
 interface HomeViewProps {
   players: Player[];
-  createPlayer: (username: string, email: string) => void;
+  createPlayer: (username: string) => void;
   selectPlayer: (playerId: number) => void;
 }
 
 function HomeView({ players, createPlayer, selectPlayer }: HomeViewProps) {
   const [showCreate, setShowCreate] = useState(false);
   const [username, setUsername] = useState('');
-  const [email, setEmail] = useState('');
 
   const handleCreate = async () => {
-    if (username && email) {
-      await createPlayer(username, email);
+    if (username) {
+      await createPlayer(username);
       setShowCreate(false);
       setUsername('');
-      setEmail('');
     }
   };
 
@@ -270,13 +267,6 @@ function HomeView({ players, createPlayer, selectPlayer }: HomeViewProps) {
               placeholder="Username" 
               value={username} 
               onChange={e => setUsername(e.target.value)} 
-              className="w-full px-4 py-2 bg-white bg-opacity-20 rounded text-white placeholder-gray-400"
-            />
-            <input 
-              type="email" 
-              placeholder="Email" 
-              value={email} 
-              onChange={e => setEmail(e.target.value)} 
               className="w-full px-4 py-2 bg-white bg-opacity-20 rounded text-white placeholder-gray-400"
             />
             <button onClick={handleCreate} className="px-6 py-2 bg-blue-600 hover:bg-blue-700 rounded">
@@ -318,7 +308,6 @@ function ProfileView({ currentPlayer, playerPokemon, pokemon, addPokemonToPlayer
       <div className="bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl p-8 shadow-2xl">
         <h2 className="text-4xl font-bold mb-2">{currentPlayer.username}</h2>
         <p className="text-2xl text-yellow-300">⭐ {currentPlayer.points} Points</p>
-        <p className="text-gray-200">{currentPlayer.email}</p>
       </div>
 
       <div className="bg-white bg-opacity-10 backdrop-blur-lg rounded-xl p-8">

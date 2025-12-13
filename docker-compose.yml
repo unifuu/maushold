@@ -33,7 +33,7 @@ services:
     volumes:
       - player-db-data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER}"]
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -49,42 +49,42 @@ services:
     volumes:
       - pokemon-db-data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER}"]
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
       interval: 5s
       timeout: 5s
       retries: 5
 
-  battle-db:
-    image: postgres:15-alpine
-    environment:
-      POSTGRES_DB: ${BATTLE_DB_NAME}
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
-    ports:
-      - "5434:5432"
-    volumes:
-      - battle-db-data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER}"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
+  # battle-db:
+  #   image: postgres:15-alpine
+  #   environment:
+  #     POSTGRES_DB: ${BATTLE_DB_NAME}
+  #     POSTGRES_USER: ${DB_USER}
+  #     POSTGRES_PASSWORD: ${DB_PASSWORD}
+  #   ports:
+  #     - "5434:5432"
+  #   volumes:
+  #     - battle-db-data:/var/lib/postgresql/data
+  #   healthcheck:
+  #     test: ["CMD-SHELL", "pg_isready -U ${DB_USER}"]
+  #     interval: 5s
+  #     timeout: 5s
+  #     retries: 5
 
-  ranking-db:
-    image: postgres:15-alpine
-    environment:
-      POSTGRES_DB: ${RANKING_DB_NAME}
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
-    ports:
-      - "5435:5432"
-    volumes:
-      - ranking-db-data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER}"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
+  # ranking-db:
+  #   image: postgres:15-alpine
+  #   environment:
+  #     POSTGRES_DB: ${RANKING_DB_NAME}
+  #     POSTGRES_USER: ${DB_USER}
+  #     POSTGRES_PASSWORD: ${DB_PASSWORD}
+  #   ports:
+  #     - "5435:5432"
+  #   volumes:
+  #     - ranking-db-data:/var/lib/postgresql/data
+  #   healthcheck:
+  #     test: ["CMD-SHELL", "pg_isready -U ${DB_USER}"]
+  #     interval: 5s
+  #     timeout: 5s
+  #     retries: 5
 
   # Redis
   redis:
@@ -214,16 +214,16 @@ services:
   #     PLAYER_SERVICE_URL: http://player-service:8001
   #     SERVICE_PORT: 8004
   #     CONSUL_ADDR: consul:8500
-    depends_on:
-      # ranking-db:
-      #   condition: service_healthy
-      redis:
-        condition: service_healthy
-      rabbitmq:
-        condition: service_healthy
-      consul:
-        condition: service_healthy
-    restart: on-failure
+  #   depends_on:
+  #     ranking-db:
+  #       condition: service_healthy
+  #     redis:
+  #       condition: service_healthy
+  #     rabbitmq:
+  #       condition: service_healthy
+  #     consul:
+  #       condition: service_healthy
+  #   restart: on-failure
 
   # Frontend
   frontend:

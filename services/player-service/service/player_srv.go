@@ -35,7 +35,7 @@ func NewPlayerService(repo repository.PlayerRepository, redisClient *redis.Clien
 }
 
 func (s *playerService) CreatePlayer(player *model.Player) error {
-	player.Power = 0
+	player.Points = 0
 	return s.repo.Create(player)
 }
 
@@ -87,6 +87,6 @@ func (s *playerService) UpdatePlayerPoints(id uint, delta int) error {
 		return err
 	}
 
-	player.Power += delta
+	player.Points += delta
 	return s.UpdatePlayer(player)
 }
