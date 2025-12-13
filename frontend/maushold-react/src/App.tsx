@@ -75,24 +75,63 @@ const App: React.FC = () => {
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [recentBattles, setRecentBattles] = useState<Battle[]>([]);
   const [loading, setLoading] = useState(false);
+  const [dataLoading, setDataLoading] = useState(true);
 
   useEffect(() => {
+    console.log('App mounted, loading initial data...');
     loadInitialData();
   }, []);
 
   const loadInitialData = async () => {
+    setDataLoading(true);
     try {
-      const [playersRes, pokemonRes, leaderboardRes] = await Promise.all([
+      console.log('Starting to load initial data...');
+      
+      // Load players and pokemon (these services are running)
+      const [playersRes, pokemonRes] = await Promise.all([
         fetch(`${API.PLAYER}/players`),
-        fetch(`${API.POKEMON}/pokemon`),
-        fetch(`${API.RANKING}/rankings`)
+        fetch(`${API.POKEMON}/pokemon`)
       ]);
       
-      setPlayers(await playersRes.json());
-      setPokemon(await pokemonRes.json());
-      setLeaderboard(await leaderboardRes.json());
+      console.log('Players response status:', playersRes.status);
+      console.log('Pokemon response status:', pokemonRes.status);
+      
+      if (playersRes.ok) {
+        const playersData = await playersRes.json();
+        console.log('Loaded players:', playersData);
+        setPlayers(playersData || []);
+      } else {
+        console.error('Failed to load players:', playersRes.status, await playersRes.text());
+        setPlayers([]);
+      }
+      
+      if (pokemonRes.ok) {
+        const pokemonData = await pokemonRes.json();
+        console.log('Loaded pokemon:', pokemonData);
+        setPokemon(pokemonData || []);
+      } else {
+        console.error('Failed to load pokemon:', pokemonRes.status, await pokemonRes.text());
+        setPokemon([]);
+      }
+
+      // Try to load leaderboard (ranking service might not be running)
+      try {
+        const leaderboardRes = await fetch(`${API.RANKING}/rankings`);
+        if (leaderboardRes.ok) {
+          const leaderboardData = await leaderboardRes.json();
+          setLeaderboard(leaderboardData || []);
+        }
+      } catch (error) {
+        console.log('Ranking service not available:', error);
+        setLeaderboard([]);
+      }
     } catch (error) {
       console.error('Error loading data:', error);
+      setPlayers([]);
+      setPokemon([]);
+      setLeaderboard([]);
+    } finally {
+      setDataLoading(false);
     }
   };
 
@@ -114,7 +153,10 @@ const App: React.FC = () => {
       
       const newPlayer: Player = await response.json();
       console.log('Player created:', newPlayer);
-      setPlayers([...players, newPlayer]);
+      
+      // Refresh the player list to make sure we have the latest data
+      await loadInitialData();
+      
       setCurrentPlayer(newPlayer);
       setView('profile');
     } catch (error) {
@@ -217,7 +259,7 @@ const App: React.FC = () => {
       </nav>
 
       <div className="container">
-        {view === 'home' && <HomeView players={players} createPlayer={createPlayer} selectPlayer={selectPlayer} />}
+        {view === 'home' && <HomeView players={players} createPlayer={createPlayer} selectPlayer={selectPlayer} refreshData={loadInitialData} dataLoading={dataLoading} />}
         {view === 'profile' && currentPlayer && (
           <ProfileView 
             currentPlayer={currentPlayer} 
@@ -250,7 +292,9 @@ const HomeView: React.FC<{
   players: Player[];
   createPlayer: (username: string) => void;
   selectPlayer: (playerId: number) => void;
-}> = ({ players, createPlayer, selectPlayer }) => {
+  refreshData?: () => void;
+  dataLoading?: boolean;
+}> = ({ players, createPlayer, selectPlayer, refreshData, dataLoading }) => {
   const [showCreate, setShowCreate] = useState(false);
   const [username, setUsername] = useState('');
 
@@ -272,9 +316,16 @@ const HomeView: React.FC<{
       <div className="card">
         <div className="card-header">
           <h3 className="card-title">Select Your Player</h3>
-          <button onClick={() => setShowCreate(!showCreate)} className="btn-primary">
-            Create New Player
-          </button>
+          <div className="button-group">
+            <button onClick={() => setShowCreate(!showCreate)} className="btn-primary">
+              Create New Player
+            </button>
+            {refreshData && (
+              <button onClick={refreshData} className="btn-secondary">
+                🔄 Refresh
+              </button>
+            )}
+          </div>
         </div>
 
         {showCreate && (
@@ -292,16 +343,22 @@ const HomeView: React.FC<{
         )}
 
         <div className="player-grid">
-          {players.map(player => (
-            <div 
-              key={player.id} 
-              onClick={() => selectPlayer(player.id)} 
-              className="player-card"
-            >
-              <h4 className="player-name">{player.username}</h4>
-              <p className="player-points">⭐ {player.points} points</p>
-            </div>
-          ))}
+          {dataLoading ? (
+            <p>Loading players...</p>
+          ) : players.length === 0 ? (
+            <p>No players found. Create the first player!</p>
+          ) : (
+            players.map(player => (
+              <div 
+                key={player.id} 
+                onClick={() => selectPlayer(player.id)} 
+                className="player-card"
+              >
+                <h4 className="player-name">{player.username}</h4>
+                <p className="player-points">⭐ {player.points} points</p>
+              </div>
+            ))
+          )}
         </div>
       </div>
     </div>
