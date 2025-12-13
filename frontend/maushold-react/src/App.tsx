@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import './App.css';
 
 const API = {
   PLAYER: 'http://localhost:8001',
@@ -25,7 +26,6 @@ interface Pokemon {
   base_defense: number;
   base_speed: number;
   description?: string;
-  image_url?: string;
 }
 
 interface PlayerPokemon {
@@ -34,12 +34,10 @@ interface PlayerPokemon {
   pokemon_id: number;
   nickname: string;
   level: number;
-  experience: number;
   hp: number;
   attack: number;
   defense: number;
   speed: number;
-  created_at: string;
 }
 
 interface Battle {
@@ -54,7 +52,6 @@ interface Battle {
   points_won: number;
   points_lost: number;
   created_at: string;
-  completed_at?: string;
 }
 
 interface LeaderboardEntry {
@@ -69,7 +66,7 @@ interface LeaderboardEntry {
 
 type View = 'home' | 'profile' | 'battle' | 'battle-result' | 'leaderboard';
 
-export default function MausholdApp() {
+const App: React.FC = () => {
   const [view, setView] = useState<View>('home');
   const [currentPlayer, setCurrentPlayer] = useState<Player | null>(null);
   const [players, setPlayers] = useState<Player[]>([]);
@@ -101,17 +98,28 @@ export default function MausholdApp() {
 
   const createPlayer = async (username: string) => {
     try {
+      console.log('Creating player:', username);
       const response = await fetch(`${API.PLAYER}/players`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username })
       });
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Error:', errorText);
+        alert(`Failed to create player: ${errorText}`);
+        return;
+      }
+      
       const newPlayer: Player = await response.json();
+      console.log('Player created:', newPlayer);
       setPlayers([...players, newPlayer]);
       setCurrentPlayer(newPlayer);
-      return newPlayer;
+      setView('profile');
     } catch (error) {
       console.error('Error creating player:', error);
+      alert(`Error: ${error}`);
     }
   };
 
@@ -184,8 +192,6 @@ export default function MausholdApp() {
       
       setRecentBattles([battle, ...recentBattles]);
       setView('battle-result');
-      
-      return battle;
     } catch (error) {
       console.error('Error starting battle:', error);
     } finally {
@@ -194,21 +200,15 @@ export default function MausholdApp() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-900 via-purple-900 to-pink-900 text-white">
-      <nav className="bg-black bg-opacity-50 backdrop-blur-lg p-4 shadow-xl">
-        <div className="container mx-auto flex justify-between items-center">
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-yellow-400 to-pink-500 bg-clip-text text-transparent">
-            🎮 Maushold
-          </h1>
-          <div className="space-x-4">
-            <button onClick={() => setView('home')} className="px-4 py-2 hover:bg-white hover:bg-opacity-10 rounded">
-              Home
-            </button>
-            <button onClick={() => setView('leaderboard')} className="px-4 py-2 hover:bg-white hover:bg-opacity-10 rounded">
-              Leaderboard
-            </button>
+    <div className="app">
+      <nav className="navbar">
+        <div className="nav-container">
+          <h1 className="logo">🎮 Maushold</h1>
+          <div className="nav-buttons">
+            <button onClick={() => setView('home')} className="nav-btn">Home</button>
+            <button onClick={() => setView('leaderboard')} className="nav-btn">Leaderboard</button>
             {currentPlayer && (
-              <button onClick={() => setView('profile')} className="px-4 py-2 bg-purple-600 hover:bg-purple-700 rounded">
+              <button onClick={() => setView('profile')} className="nav-btn-profile">
                 {currentPlayer.username}
               </button>
             )}
@@ -216,109 +216,124 @@ export default function MausholdApp() {
         </div>
       </nav>
 
-      <div className="container mx-auto p-8">
+      <div className="container">
         {view === 'home' && <HomeView players={players} createPlayer={createPlayer} selectPlayer={selectPlayer} />}
-        {view === 'profile' && currentPlayer && <ProfileView currentPlayer={currentPlayer} playerPokemon={playerPokemon} pokemon={pokemon} addPokemonToPlayer={addPokemonToPlayer} setView={setView} />}
-        {view === 'battle' && currentPlayer && <BattleView currentPlayer={currentPlayer} playerPokemon={playerPokemon} players={players} startBattle={startBattle} loading={loading} />}
+        {view === 'profile' && currentPlayer && (
+          <ProfileView 
+            currentPlayer={currentPlayer} 
+            playerPokemon={playerPokemon} 
+            pokemon={pokemon} 
+            addPokemonToPlayer={addPokemonToPlayer} 
+            setView={setView} 
+          />
+        )}
+        {view === 'battle' && currentPlayer && (
+          <BattleView 
+            currentPlayer={currentPlayer} 
+            playerPokemon={playerPokemon} 
+            players={players} 
+            startBattle={startBattle} 
+            loading={loading} 
+          />
+        )}
         {view === 'leaderboard' && <LeaderboardView leaderboard={leaderboard} />}
-        {view === 'battle-result' && recentBattles.length > 0 && currentPlayer && <BattleResultView battle={recentBattles[0]} currentPlayer={currentPlayer} setView={setView} />}
+        {view === 'battle-result' && recentBattles.length > 0 && currentPlayer && (
+          <BattleResultView battle={recentBattles[0]} currentPlayer={currentPlayer} setView={setView} />
+        )}
       </div>
     </div>
   );
-}
+};
 
-interface HomeViewProps {
+// Home View Component
+const HomeView: React.FC<{
   players: Player[];
   createPlayer: (username: string) => void;
   selectPlayer: (playerId: number) => void;
-}
-
-function HomeView({ players, createPlayer, selectPlayer }: HomeViewProps) {
+}> = ({ players, createPlayer, selectPlayer }) => {
   const [showCreate, setShowCreate] = useState(false);
   const [username, setUsername] = useState('');
 
-  const handleCreate = async () => {
-    if (username) {
-      await createPlayer(username);
+  const handleCreate = () => {
+    if (username.trim()) {
+      createPlayer(username);
       setShowCreate(false);
       setUsername('');
     }
   };
 
   return (
-    <div className="space-y-8">
-      <div className="text-center space-y-4">
-        <h2 className="text-5xl font-bold">Welcome to Maushold</h2>
-        <p className="text-xl text-gray-300">Battle with Pokémon and climb the rankings!</p>
+    <div className="view">
+      <div className="header">
+        <h2 className="title">Welcome to Maushold</h2>
+        <p className="subtitle">Battle with Pokémon and climb the rankings!</p>
       </div>
 
-      <div className="bg-white bg-opacity-10 backdrop-blur-lg rounded-xl p-8">
-        <div className="flex justify-between items-center mb-6">
-          <h3 className="text-2xl font-bold">Select Your Player</h3>
-          <button onClick={() => setShowCreate(!showCreate)} className="px-6 py-2 bg-green-600 hover:bg-green-700 rounded-lg">
+      <div className="card">
+        <div className="card-header">
+          <h3 className="card-title">Select Your Player</h3>
+          <button onClick={() => setShowCreate(!showCreate)} className="btn-primary">
             Create New Player
           </button>
         </div>
 
         {showCreate && (
-          <div className="mb-6 p-4 bg-black bg-opacity-30 rounded-lg space-y-4">
+          <div className="create-form">
             <input 
               type="text" 
-              placeholder="Username" 
+              placeholder="Enter username" 
               value={username} 
-              onChange={e => setUsername(e.target.value)} 
-              className="w-full px-4 py-2 bg-white bg-opacity-20 rounded text-white placeholder-gray-400"
+              onChange={e => setUsername(e.target.value)}
+              onKeyPress={e => e.key === 'Enter' && handleCreate()}
+              className="input"
             />
-            <button onClick={handleCreate} className="px-6 py-2 bg-blue-600 hover:bg-blue-700 rounded">
-              Create
-            </button>
+            <button onClick={handleCreate} className="btn-submit">Create</button>
           </div>
         )}
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="player-grid">
           {players.map(player => (
             <div 
               key={player.id} 
               onClick={() => selectPlayer(player.id)} 
-              className="p-6 bg-gradient-to-br from-purple-600 to-pink-600 rounded-lg cursor-pointer hover:scale-105 transition transform"
+              className="player-card"
             >
-              <h4 className="text-xl font-bold">{player.username}</h4>
-              <p className="text-yellow-300">⭐ {player.points} points</p>
+              <h4 className="player-name">{player.username}</h4>
+              <p className="player-points">⭐ {player.points} points</p>
             </div>
           ))}
         </div>
       </div>
     </div>
   );
-}
+};
 
-interface ProfileViewProps {
+// Profile View Component
+const ProfileView: React.FC<{
   currentPlayer: Player;
   playerPokemon: PlayerPokemon[];
   pokemon: Pokemon[];
   addPokemonToPlayer: (pokemonId: number) => void;
   setView: (view: View) => void;
-}
-
-function ProfileView({ currentPlayer, playerPokemon, pokemon, addPokemonToPlayer, setView }: ProfileViewProps) {
+}> = ({ currentPlayer, playerPokemon, pokemon, addPokemonToPlayer, setView }) => {
   const [showAdd, setShowAdd] = useState(false);
 
   return (
-    <div className="space-y-8">
-      <div className="bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl p-8 shadow-2xl">
-        <h2 className="text-4xl font-bold mb-2">{currentPlayer.username}</h2>
-        <p className="text-2xl text-yellow-300">⭐ {currentPlayer.points} Points</p>
+    <div className="view">
+      <div className="profile-header">
+        <h2 className="profile-name">{currentPlayer.username}</h2>
+        <p className="profile-points">⭐ {currentPlayer.points} Points</p>
       </div>
 
-      <div className="bg-white bg-opacity-10 backdrop-blur-lg rounded-xl p-8">
-        <div className="flex justify-between items-center mb-6">
-          <h3 className="text-2xl font-bold">Your Pokémon Team</h3>
-          <div className="space-x-4">
-            <button onClick={() => setShowAdd(!showAdd)} className="px-6 py-2 bg-green-600 hover:bg-green-700 rounded-lg">
+      <div className="card">
+        <div className="card-header">
+          <h3 className="card-title">Your Pokémon Team</h3>
+          <div className="button-group">
+            <button onClick={() => setShowAdd(!showAdd)} className="btn-primary">
               Add Pokémon
             </button>
             {playerPokemon.length >= 1 && (
-              <button onClick={() => setView('battle')} className="px-6 py-2 bg-red-600 hover:bg-red-700 rounded-lg">
+              <button onClick={() => setView('battle')} className="btn-battle">
                 ⚔️ Battle!
               </button>
             )}
@@ -326,17 +341,17 @@ function ProfileView({ currentPlayer, playerPokemon, pokemon, addPokemonToPlayer
         </div>
 
         {showAdd && (
-          <div className="mb-6 p-4 bg-black bg-opacity-30 rounded-lg">
-            <h4 className="text-xl mb-4">Available Pokémon</h4>
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+          <div className="add-pokemon">
+            <h4 className="section-title">Available Pokémon</h4>
+            <div className="pokemon-grid">
               {pokemon.map(p => (
                 <div 
                   key={p.id} 
                   onClick={() => { addPokemonToPlayer(p.id); setShowAdd(false); }} 
-                  className="p-4 bg-gradient-to-br from-blue-500 to-purple-500 rounded-lg cursor-pointer hover:scale-105 transition"
+                  className="pokemon-card"
                 >
-                  <p className="font-bold text-center">{p.name}</p>
-                  <p className="text-sm text-center text-gray-200">{p.type1}</p>
+                  <p className="pokemon-name">{p.name}</p>
+                  <p className="pokemon-type">{p.type1}</p>
                 </div>
               ))}
             </div>
@@ -344,13 +359,13 @@ function ProfileView({ currentPlayer, playerPokemon, pokemon, addPokemonToPlayer
         )}
 
         {playerPokemon.length === 0 ? (
-          <p className="text-gray-400 text-center py-8">No Pokémon yet. Add some to your team!</p>
+          <p className="empty-message">No Pokémon yet. Add some to your team!</p>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="team-grid">
             {playerPokemon.map(p => (
-              <div key={p.id} className="bg-gradient-to-br from-indigo-600 to-purple-600 rounded-lg p-6 shadow-lg">
-                <h4 className="text-xl font-bold mb-2">{p.nickname}</h4>
-                <div className="space-y-1 text-sm">
+              <div key={p.id} className="team-card">
+                <h4 className="team-name">{p.nickname}</h4>
+                <div className="stats">
                   <p>❤️ HP: {p.hp}</p>
                   <p>⚔️ Attack: {p.attack}</p>
                   <p>🛡️ Defense: {p.defense}</p>
@@ -364,17 +379,16 @@ function ProfileView({ currentPlayer, playerPokemon, pokemon, addPokemonToPlayer
       </div>
     </div>
   );
-}
+};
 
-interface BattleViewProps {
+// Battle View Component
+const BattleView: React.FC<{
   currentPlayer: Player;
   playerPokemon: PlayerPokemon[];
   players: Player[];
   startBattle: (opponentId: number, myPokemonId: number, opponentPokemonId: number) => void;
   loading: boolean;
-}
-
-function BattleView({ currentPlayer, playerPokemon, players, startBattle, loading }: BattleViewProps) {
+}> = ({ currentPlayer, playerPokemon, players, startBattle, loading }) => {
   const [selectedMyPokemon, setSelectedMyPokemon] = useState<number | null>(null);
   const [selectedOpponent, setSelectedOpponent] = useState<number | null>(null);
   const [opponentPokemon, setOpponentPokemon] = useState<PlayerPokemon[]>([]);
@@ -394,46 +408,46 @@ function BattleView({ currentPlayer, playerPokemon, players, startBattle, loadin
   const canBattle = selectedMyPokemon && selectedOpponent && selectedOpponentPokemon;
 
   return (
-    <div className="space-y-8">
-      <h2 className="text-4xl font-bold text-center">⚔️ Battle Arena</h2>
+    <div className="view">
+      <h2 className="battle-title">⚔️ Battle Arena</h2>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        <div className="bg-blue-900 bg-opacity-50 rounded-xl p-6">
-          <h3 className="text-2xl font-bold mb-4">Your Pokémon</h3>
-          <div className="space-y-4">
+      <div className="battle-grid">
+        <div className="battle-side blue">
+          <h3 className="side-title">Your Pokémon</h3>
+          <div className="selection-list">
             {playerPokemon.map(p => (
               <div 
                 key={p.id} 
                 onClick={() => setSelectedMyPokemon(p.id)} 
-                className={`p-4 rounded-lg cursor-pointer transition ${selectedMyPokemon === p.id ? 'bg-green-600' : 'bg-white bg-opacity-10 hover:bg-opacity-20'}`}
+                className={`selection-item ${selectedMyPokemon === p.id ? 'selected' : ''}`}
               >
-                <p className="font-bold">{p.nickname}</p>
-                <p className="text-sm">HP: {p.hp} | ATK: {p.attack} | DEF: {p.defense}</p>
+                <p className="selection-name">{p.nickname}</p>
+                <p className="selection-stats">HP: {p.hp} | ATK: {p.attack} | DEF: {p.defense}</p>
               </div>
             ))}
           </div>
         </div>
 
-        <div className="bg-red-900 bg-opacity-50 rounded-xl p-6">
-          <h3 className="text-2xl font-bold mb-4">Select Opponent</h3>
-          <div className="space-y-4">
+        <div className="battle-side red">
+          <h3 className="side-title">Select Opponent</h3>
+          <div className="selection-list">
             {players.filter(p => p.id !== currentPlayer.id).map(p => (
               <div key={p.id}>
                 <div 
                   onClick={() => selectOpponent(p.id)} 
-                  className={`p-4 rounded-lg cursor-pointer transition ${selectedOpponent === p.id ? 'bg-red-600' : 'bg-white bg-opacity-10 hover:bg-opacity-20'}`}
+                  className={`selection-item ${selectedOpponent === p.id ? 'selected' : ''}`}
                 >
-                  <p className="font-bold">{p.username}</p>
-                  <p className="text-sm">⭐ {p.points} points</p>
+                  <p className="selection-name">{p.username}</p>
+                  <p className="selection-stats">⭐ {p.points} points</p>
                 </div>
                 
                 {selectedOpponent === p.id && opponentPokemon.length > 0 && (
-                  <div className="ml-4 mt-2 space-y-2">
+                  <div className="sub-selection">
                     {opponentPokemon.map(op => (
                       <div 
                         key={op.id} 
                         onClick={() => setSelectedOpponentPokemon(op.id)} 
-                        className={`p-3 rounded cursor-pointer text-sm ${selectedOpponentPokemon === op.id ? 'bg-yellow-600' : 'bg-white bg-opacity-10 hover:bg-opacity-20'}`}
+                        className={`sub-item ${selectedOpponentPokemon === op.id ? 'selected' : ''}`}
                       >
                         {op.nickname} (HP: {op.hp})
                       </div>
@@ -446,90 +460,78 @@ function BattleView({ currentPlayer, playerPokemon, players, startBattle, loadin
         </div>
       </div>
 
-      <div className="text-center">
+      <div className="battle-action">
         <button 
-          onClick={() => selectedMyPokemon && selectedOpponent && selectedOpponentPokemon && startBattle(selectedOpponent, selectedMyPokemon, selectedOpponentPokemon)} 
+          onClick={() => selectedMyPokemon && selectedOpponent && selectedOpponentPokemon && 
+                        startBattle(selectedOpponent, selectedMyPokemon, selectedOpponentPokemon)} 
           disabled={!canBattle || loading} 
-          className={`px-12 py-4 text-2xl font-bold rounded-xl transition ${canBattle && !loading ? 'bg-gradient-to-r from-red-600 to-yellow-600 hover:from-red-700 hover:to-yellow-700' : 'bg-gray-600 cursor-not-allowed'}`}
+          className={`btn-battle-start ${!canBattle || loading ? 'disabled' : ''}`}
         >
           {loading ? 'Battling...' : '⚔️ START BATTLE!'}
         </button>
       </div>
     </div>
   );
-}
+};
 
-interface BattleResultViewProps {
+// Battle Result View
+const BattleResultView: React.FC<{
   battle: Battle;
   currentPlayer: Player;
   setView: (view: View) => void;
-}
-
-function BattleResultView({ battle, currentPlayer, setView }: BattleResultViewProps) {
+}> = ({ battle, currentPlayer, setView }) => {
   const isWinner = battle.winner_id === currentPlayer.id;
 
   return (
-    <div className="max-w-4xl mx-auto space-y-8">
-      <div className={`text-center p-8 rounded-xl ${isWinner ? 'bg-gradient-to-r from-green-600 to-blue-600' : 'bg-gradient-to-r from-red-600 to-gray-600'}`}>
-        <h2 className="text-5xl font-bold mb-4">{isWinner ? '🎉 Victory!' : '💔 Defeat'}</h2>
-        <p className="text-2xl">{isWinner ? `+${battle.points_won}` : `-${battle.points_lost}`} Points</p>
+    <div className="view">
+      <div className={`result-header ${isWinner ? 'win' : 'lose'}`}>
+        <h2 className="result-title">{isWinner ? '🎉 Victory!' : '💔 Defeat'}</h2>
+        <p className="result-points">{isWinner ? `+${battle.points_won}` : `-${battle.points_lost}`} Points</p>
       </div>
 
-      <div className="bg-white bg-opacity-10 backdrop-blur-lg rounded-xl p-6">
-        <h3 className="text-2xl font-bold mb-4">Battle Log</h3>
-        <pre className="bg-black bg-opacity-50 p-4 rounded overflow-auto whitespace-pre-wrap text-sm font-mono">
-          {battle.battle_log}
-        </pre>
+      <div className="card">
+        <h3 className="card-title">Battle Log</h3>
+        <pre className="battle-log">{battle.battle_log}</pre>
       </div>
 
-      <div className="flex justify-center space-x-4">
-        <button onClick={() => setView('battle')} className="px-8 py-3 bg-red-600 hover:bg-red-700 rounded-lg">
-          Battle Again
-        </button>
-        <button onClick={() => setView('profile')} className="px-8 py-3 bg-blue-600 hover:bg-blue-700 rounded-lg">
-          Back to Profile
-        </button>
+      <div className="result-actions">
+        <button onClick={() => setView('battle')} className="btn-secondary">Battle Again</button>
+        <button onClick={() => setView('profile')} className="btn-primary">Back to Profile</button>
       </div>
     </div>
   );
-}
+};
 
-interface LeaderboardViewProps {
-  leaderboard: LeaderboardEntry[];
-}
-
-function LeaderboardView({ leaderboard }: LeaderboardViewProps) {
+// Leaderboard View
+const LeaderboardView: React.FC<{ leaderboard: LeaderboardEntry[] }> = ({ leaderboard }) => {
   return (
-    <div className="space-y-8">
-      <h2 className="text-4xl font-bold text-center">🏆 Global Leaderboard</h2>
+    <div className="view">
+      <h2 className="page-title">🏆 Global Leaderboard</h2>
       
-      <div className="bg-white bg-opacity-10 backdrop-blur-lg rounded-xl overflow-hidden">
-        <table className="w-full">
-          <thead className="bg-black bg-opacity-50">
+      <div className="card">
+        <table className="leaderboard-table">
+          <thead>
             <tr>
-              <th className="p-4 text-left">Rank</th>
-              <th className="p-4 text-left">Player</th>
-              <th className="p-4 text-right">Points</th>
-              <th className="p-4 text-right">Battles</th>
-              <th className="p-4 text-right">Win Rate</th>
+              <th>Rank</th>
+              <th>Player</th>
+              <th>Points</th>
+              <th>Battles</th>
+              <th>Win Rate</th>
             </tr>
           </thead>
           <tbody>
             {leaderboard.map((entry, i) => (
-              <tr 
-                key={entry.player_id} 
-                className={`border-t border-white border-opacity-10 hover:bg-white hover:bg-opacity-5 ${i < 3 ? 'bg-yellow-600 bg-opacity-20' : ''}`}
-              >
-                <td className="p-4">
+              <tr key={entry.player_id} className={i < 3 ? 'top-three' : ''}>
+                <td>
                   {i === 0 && '🥇'}
                   {i === 1 && '🥈'}
                   {i === 2 && '🥉'}
                   {i >= 3 && `#${i + 1}`}
                 </td>
-                <td className="p-4 font-bold">{entry.username}</td>
-                <td className="p-4 text-right text-yellow-300">{entry.total_points}</td>
-                <td className="p-4 text-right">{entry.wins + entry.losses}</td>
-                <td className="p-4 text-right">{entry.win_rate ? entry.win_rate.toFixed(1) : '0.0'}%</td>
+                <td className="player-name-cell">{entry.username}</td>
+                <td className="points-cell">{entry.total_points}</td>
+                <td>{entry.wins + entry.losses}</td>
+                <td>{entry.win_rate ? entry.win_rate.toFixed(1) : '0.0'}%</td>
               </tr>
             ))}
           </tbody>
@@ -537,4 +539,6 @@ function LeaderboardView({ leaderboard }: LeaderboardViewProps) {
       </div>
     </div>
   );
-}
+};
+
+export default App;
