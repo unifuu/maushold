@@ -5,12 +5,12 @@ import (
 	"net/http"
 	"os"
 
-	"maushold/pokemon-service/config"
-	"maushold/pokemon-service/handler"
-	"maushold/pokemon-service/messaging"
-	"maushold/pokemon-service/repository"
-	"maushold/pokemon-service/routes"
-	"maushold/pokemon-service/service"
+	"maushold/monster-service/config"
+	"maushold/monster-service/handler"
+	"maushold/monster-service/messaging"
+	"maushold/monster-service/repository"
+	"maushold/monster-service/routes"
+	"maushold/monster-service/service"
 
 	"github.com/gorilla/mux"
 )
@@ -25,23 +25,23 @@ func main() {
 	defer rabbitCh.Close()
 
 	consulClient := config.InitConsul(cfg)
-	err := config.RegisterService(consulClient, "pokemon-service", cfg.ServicePort)
+	err := config.RegisterService(consulClient, "monster-service", cfg.ServicePort)
 	if err != nil {
 		log.Printf("Failed to register with Consul: %v", err)
 	}
-	defer config.DeregisterService(consulClient, "pokemon-service")
+	defer config.DeregisterService(consulClient, "monster-service")
 
-	pokemonRepo := repository.NewPokemonRepository(db)
-	pokemonService := service.NewPokemonService(pokemonRepo, redisClient)
+	monsterRepo := repository.NewPokemonRepository(db)
+	monsterService := service.NewPokemonService(monsterRepo, redisClient)
 
 	// Seed initial data
-	service.SeedPokemon(pokemonRepo)
+	service.SeedPokemon(monsterRepo)
 
 	messageProducer := messaging.NewProducer(rabbitCh)
-	pokemonHandler := handler.NewPokemonHandler(pokemonService, messageProducer)
+	monsterHandler := handler.NewPokemonHandler(monsterService, messageProducer)
 
 	router := mux.NewRouter()
-	routes.SetupPokemonRoutes(router, pokemonHandler)
+	routes.SetupPokemonRoutes(router, monsterHandler)
 
 	port := os.Getenv("SERVICE_PORT")
 	if port == "" {

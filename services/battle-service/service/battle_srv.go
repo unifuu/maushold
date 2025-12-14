@@ -12,7 +12,7 @@ import (
 )
 
 type BattleService interface {
-	CreateBattle(player1ID, player2ID, pokemon1ID, pokemon2ID uint) (*model.Battle, error)
+	CreateBattle(player1ID, player2ID, monster1ID, monster2ID uint) (*model.Battle, error)
 	GetBattle(id uint) (*model.Battle, error)
 	GetPlayerBattles(playerID uint) ([]model.Battle, error)
 	GetRecentBattles() ([]model.Battle, error)
@@ -39,22 +39,22 @@ func NewBattleService(
 	}
 }
 
-func (s *battleService) CreateBattle(player1ID, player2ID, pokemon1ID, pokemon2ID uint) (*model.Battle, error) {
-	pokemon1, err := s.playerClient.GetPlayerPokemon(player1ID, pokemon1ID)
+func (s *battleService) CreateBattle(player1ID, player2ID, monster1ID, monster2ID uint) (*model.Battle, error) {
+	monster1, err := s.playerClient.GetPlayerPokemon(player1ID, monster1ID)
 	if err != nil {
-		return nil, errors.New("pokemon 1 not found")
+		return nil, errors.New("monster 1 not found")
 	}
 
-	pokemon2, err := s.playerClient.GetPlayerPokemon(player2ID, pokemon2ID)
+	monster2, err := s.playerClient.GetPlayerPokemon(player2ID, monster2ID)
 	if err != nil {
-		return nil, errors.New("pokemon 2 not found")
+		return nil, errors.New("monster 2 not found")
 	}
 
 	battle := &model.Battle{
 		Player1ID:  player1ID,
 		Player2ID:  player2ID,
-		Pokemon1ID: pokemon1ID,
-		Pokemon2ID: pokemon2ID,
+		Pokemon1ID: monster1ID,
+		Pokemon2ID: monster2ID,
 		Status:     "in_progress",
 	}
 
@@ -62,7 +62,7 @@ func (s *battleService) CreateBattle(player1ID, player2ID, pokemon1ID, pokemon2I
 		return nil, err
 	}
 
-	winner, battleLog := s.battleEngine.SimulateBattle(pokemon1, pokemon2)
+	winner, battleLog := s.battleEngine.SimulateBattle(monster1, monster2)
 
 	if winner == 1 {
 		battle.WinnerID = player1ID

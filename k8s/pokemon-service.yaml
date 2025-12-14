@@ -1,11 +1,11 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: pokemon-service
+  name: monster-service
   namespace: maushold
 spec:
   selector:
-    app: pokemon-service
+    app: monster-service
   ports:
     - port: 8002
       targetPort: 8002
@@ -15,31 +15,31 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: pokemon-service
+  name: monster-service
   namespace: maushold
 spec:
   replicas: 2
   selector:
     matchLabels:
-      app: pokemon-service
+      app: monster-service
   template:
     metadata:
       labels:
-        app: pokemon-service
+        app: monster-service
     spec:
       containers:
-      - name: pokemon-service
-        image: maushold/pokemon-service:latest
+      - name: monster-service
+        image: maushold/monster-service:latest
         imagePullPolicy: Never
         ports:
         - containerPort: 8002
         env:
         - name: DB_HOST
-          value: "pokemon-db"
+          value: "monster-db"
         - name: DB_PORT
           value: "5432"
         - name: DB_NAME
-          value: "pokemon_db"
+          value: "monster_db"
         - name: DB_USER
           valueFrom:
             secretKeyRef:

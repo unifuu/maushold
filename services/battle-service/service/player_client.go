@@ -17,8 +17,8 @@ func NewPlayerClient(baseURL string) *PlayerClient {
 	return &PlayerClient{baseURL: baseURL}
 }
 
-func (c *PlayerClient) GetPlayerPokemon(playerID, pokemonID uint) (*model.PlayerPokemon, error) {
-	url := fmt.Sprintf("%s/players/%d/pokemon", c.baseURL, playerID)
+func (c *PlayerClient) GetPlayerPokemon(playerID, monsterID uint) (*model.PlayerPokemon, error) {
+	url := fmt.Sprintf("%s/players/%d/monster", c.baseURL, playerID)
 
 	resp, err := http.Get(url)
 	if err != nil {
@@ -28,13 +28,13 @@ func (c *PlayerClient) GetPlayerPokemon(playerID, pokemonID uint) (*model.Player
 
 	body, _ := io.ReadAll(resp.Body)
 
-	var pokemons []model.PlayerPokemon
-	if err := json.Unmarshal(body, &pokemons); err != nil {
+	var monsters []model.PlayerPokemon
+	if err := json.Unmarshal(body, &monsters); err != nil {
 		return nil, err
 	}
 
-	for _, p := range pokemons {
-		if p.ID == pokemonID {
+	for _, p := range monsters {
+		if p.ID == monsterID {
 			if p.Nickname == "" {
 				p.Nickname = fmt.Sprintf("Pokemon #%d", p.ID)
 			}
@@ -42,5 +42,5 @@ func (c *PlayerClient) GetPlayerPokemon(playerID, pokemonID uint) (*model.Player
 		}
 	}
 
-	return nil, fmt.Errorf("pokemon not found")
+	return nil, fmt.Errorf("monster not found")
 }

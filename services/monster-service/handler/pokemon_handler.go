@@ -5,80 +5,80 @@ import (
 	"net/http"
 	"strconv"
 
-	"maushold/pokemon-service/messaging"
-	"maushold/pokemon-service/model"
-	"maushold/pokemon-service/service"
+	"maushold/monster-service/messaging"
+	"maushold/monster-service/model"
+	"maushold/monster-service/service"
 
 	"github.com/gorilla/mux"
 )
 
 type PokemonHandler struct {
-	pokemonService  service.PokemonService
+	monsterService  service.PokemonService
 	messageProducer *messaging.Producer
 }
 
-func NewPokemonHandler(pokemonService service.PokemonService, messageProducer *messaging.Producer) *PokemonHandler {
+func NewPokemonHandler(monsterService service.PokemonService, messageProducer *messaging.Producer) *PokemonHandler {
 	return &PokemonHandler{
-		pokemonService:  pokemonService,
+		monsterService:  monsterService,
 		messageProducer: messageProducer,
 	}
 }
 
 func (h *PokemonHandler) CreatePokemon(w http.ResponseWriter, r *http.Request) {
-	var pokemon model.Pokemon
-	if err := json.NewDecoder(r.Body).Decode(&pokemon); err != nil {
+	var monster model.Pokemon
+	if err := json.NewDecoder(r.Body).Decode(&monster); err != nil {
 		respondError(w, http.StatusBadRequest, "Invalid request payload")
 		return
 	}
 
-	if err := h.pokemonService.CreatePokemon(&pokemon); err != nil {
+	if err := h.monsterService.CreatePokemon(&monster); err != nil {
 		respondError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	h.messageProducer.PublishPokemonEvent("pokemon.created", pokemon)
-	respondJSON(w, http.StatusCreated, pokemon)
+	h.messageProducer.PublishPokemonEvent("monster.created", monster)
+	respondJSON(w, http.StatusCreated, monster)
 }
 
 func (h *PokemonHandler) GetPokemon(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, err := strconv.Atoi(vars["id"])
 	if err != nil {
-		respondError(w, http.StatusBadRequest, "Invalid pokemon ID")
+		respondError(w, http.StatusBadRequest, "Invalid monster ID")
 		return
 	}
 
-	pokemon, err := h.pokemonService.GetPokemon(id)
+	monster, err := h.monsterService.GetPokemon(id)
 	if err != nil {
 		respondError(w, http.StatusNotFound, "Pokemon not found")
 		return
 	}
 
-	respondJSON(w, http.StatusOK, pokemon)
+	respondJSON(w, http.StatusOK, monster)
 }
 
 func (h *PokemonHandler) GetAllPokemon(w http.ResponseWriter, r *http.Request) {
-	pokemon, err := h.pokemonService.GetAllPokemon()
+	monster, err := h.monsterService.GetAllPokemon()
 	if err != nil {
 		respondError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	respondJSON(w, http.StatusOK, pokemon)
+	respondJSON(w, http.StatusOK, monster)
 }
 
 func (h *PokemonHandler) GetRandomPokemon(w http.ResponseWriter, r *http.Request) {
-	pokemon, err := h.pokemonService.GetRandomPokemon()
+	monster, err := h.monsterService.GetRandomPokemon()
 	if err != nil {
 		respondError(w, http.StatusNotFound, "No Pokemon found")
 		return
 	}
 
-	respondJSON(w, http.StatusOK, pokemon)
+	respondJSON(w, http.StatusOK, monster)
 }
 
 func (h *PokemonHandler) HealthCheck(w http.ResponseWriter, r *http.Request) {
-	respondJSON(w, http.StatusOK, map[string]string{"status": "healthy", "service": "pokemon-service"})
+	respondJSON(w, http.StatusOK, map[string]string{"status": "healthy", "service": "monster-service"})
 }
 
 func respondJSON(w http.ResponseWriter, status int, data interface{}) {

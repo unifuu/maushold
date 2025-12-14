@@ -38,16 +38,16 @@ services:
       timeout: 5s
       retries: 5
 
-  pokemon-db:
+  monster-db:
     image: postgres:15-alpine
     environment:
-      POSTGRES_DB: ${POKEMON_DB_NAME}
+      POSTGRES_DB: ${MONSTER_DB_NAME}
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
     ports:
       - "5433:5432"
     volumes:
-      - pokemon-db-data:/var/lib/postgresql/data
+      - monster-db-data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
       interval: 5s
@@ -144,14 +144,14 @@ services:
         condition: service_healthy
     restart: on-failure
 
-  pokemon-service:
-    build: ./services/pokemon-service
+  monster-service:
+    build: ./services/monster-service
     ports:
       - "8002:8002"
     environment:
-      DB_HOST: pokemon-db
+      DB_HOST: monster-db
       DB_PORT: 5432
-      DB_NAME: ${POKEMON_DB_NAME}
+      DB_NAME: ${MONSTER_DB_NAME}
       DB_USER: ${DB_USER}
       DB_PASSWORD: ${DB_PASSWORD}
       REDIS_HOST: redis:6379
@@ -160,7 +160,7 @@ services:
       SERVICE_PORT: 8002
       CONSUL_ADDR: consul:8500
     depends_on:
-      pokemon-db:
+      monster-db:
         condition: service_healthy
       redis:
         condition: service_healthy
@@ -184,7 +184,7 @@ services:
       REDIS_PASSWORD: ${REDIS_PASSWORD}
       RABBITMQ_URL: amqp://${RABBITMQ_USER}:${RABBITMQ_PASSWORD}@rabbitmq:5672/
       PLAYER_SERVICE_URL: http://player-service:8001
-      POKEMON_SERVICE_URL: http://pokemon-service:8002
+      MONSTER_SERVICE_URL: http://monster-service:8002
       SERVICE_PORT: 8003
       CONSUL_ADDR: consul:8500
     depends_on:
@@ -232,19 +232,19 @@ services:
       - "3000:3000"
     environment:
       REACT_APP_PLAYER_SERVICE: http://localhost:8001
-      REACT_APP_POKEMON_SERVICE: http://localhost:8002
+      REACT_APP_MONSTER_SERVICE: http://localhost:8002
       REACT_APP_BATTLE_SERVICE: http://localhost:8003
       REACT_APP_RANKING_SERVICE: http://localhost:8004
     depends_on:
       - player-service
-      - pokemon-service
+      - monster-service
       - battle-service
       - ranking-service
 
 volumes:
   consul-data:
   player-db-data:
-  pokemon-db-data:
+  monster-db-data:
   battle-db-data:
   ranking-db-data:
   redis-data:

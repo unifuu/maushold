@@ -13,7 +13,7 @@ type Player struct {
 type PlayerPokemon struct {
 	ID         uint      `gorm:"primaryKey" json:"id"`
 	PlayerID   uint      `gorm:"not null;index" json:"player_id"`
-	PokemonID  int       `gorm:"not null" json:"pokemon_id"`
+	PokemonID  int       `gorm:"not null" json:"monster_id"`
 	Level      int       `gorm:"default:1" json:"level"`
 	Experience int       `gorm:"default:0" json:"experience"`
 	HP         int       `gorm:"not null" json:"hp"`

@@ -30,7 +30,7 @@ func LoadConfig() *Config {
 		ServicePort:       getEnv("SERVICE_PORT", "8003"),
 		ConsulAddr:        getEnv("CONSUL_ADDR", "consul:8500"),
 		PlayerServiceURL:  getEnv("PLAYER_SERVICE_URL", "http://player-service:8001"),
-		PokemonServiceURL: getEnv("POKEMON_SERVICE_URL", "http://pokemon-service:8002"),
+		PokemonServiceURL: getEnv("MONSTER_SERVICE_URL", "http://monster-service:8002"),
 	}
 }
 

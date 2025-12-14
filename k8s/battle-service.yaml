@@ -54,8 +54,8 @@ spec:
           value: "8003"
         - name: PLAYER_SERVICE_URL
           value: "http://player-service:8001"
-        - name: POKEMON_SERVICE_URL
-          value: "http://pokemon-service:8002"
+        - name: MONSTER_SERVICE_URL
+          value: "http://monster-service:8002"
         envFrom:
         - configMapRef:
             name: maushold-config

@@ -3,7 +3,7 @@ import './App.css';
 
 const API = {
   PLAYER: 'http://localhost:8001',
-  POKEMON: 'http://localhost:8002',
+  MONSTER: 'http://localhost:8002',
   BATTLE: 'http://localhost:8003',
   RANKING: 'http://localhost:8004'
 };
@@ -31,7 +31,7 @@ interface Pokemon {
 interface PlayerPokemon {
   id: number;
   player_id: number;
-  pokemon_id: number;
+  monster_id: number;
   nickname: string;
   level: number;
   hp: number;
@@ -44,8 +44,8 @@ interface Battle {
   id: number;
   player1_id: number;
   player2_id: number;
-  pokemon1_id: number;
-  pokemon2_id: number;
+  monster1_id: number;
+  monster2_id: number;
   winner_id: number;
   status: string;
   battle_log: string;
@@ -70,7 +70,7 @@ const App: React.FC = () => {
   const [view, setView] = useState<View>('home');
   const [currentPlayer, setCurrentPlayer] = useState<Player | null>(null);
   const [players, setPlayers] = useState<Player[]>([]);
-  const [pokemon, setPokemon] = useState<Pokemon[]>([]);
+  const [monster, setPokemon] = useState<Pokemon[]>([]);
   const [playerPokemon, setPlayerPokemon] = useState<PlayerPokemon[]>([]);
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [recentBattles, setRecentBattles] = useState<Battle[]>([]);
@@ -87,14 +87,14 @@ const App: React.FC = () => {
     try {
       console.log('Starting to load initial data...');
       
-      // Load players and pokemon (these services are running)
-      const [playersRes, pokemonRes] = await Promise.all([
+      // Load players and monster (these services are running)
+      const [playersRes, monsterRes] = await Promise.all([
         fetch(`${API.PLAYER}/players`),
-        fetch(`${API.POKEMON}/pokemon`)
+        fetch(`${API.MONSTER}/monster`)
       ]);
       
       console.log('Players response status:', playersRes.status);
-      console.log('Pokemon response status:', pokemonRes.status);
+      console.log('Pokemon response status:', monsterRes.status);
       
       if (playersRes.ok) {
         const playersData = await playersRes.json();
@@ -105,12 +105,12 @@ const App: React.FC = () => {
         setPlayers([]);
       }
       
-      if (pokemonRes.ok) {
-        const pokemonData = await pokemonRes.json();
-        console.log('Loaded pokemon:', pokemonData);
-        setPokemon(pokemonData || []);
+      if (monsterRes.ok) {
+        const monsterData = await monsterRes.json();
+        console.log('Loaded monster:', monsterData);
+        setPokemon(monsterData || []);
       } else {
-        console.error('Failed to load pokemon:', pokemonRes.status, await pokemonRes.text());
+        console.error('Failed to load monster:', monsterRes.status, await monsterRes.text());
         setPokemon([]);
       }
 
@@ -167,40 +167,40 @@ const App: React.FC = () => {
 
   const selectPlayer = async (playerId: number) => {
     try {
-      const [playerRes, pokemonRes] = await Promise.all([
+      const [playerRes, monsterRes] = await Promise.all([
         fetch(`${API.PLAYER}/players/${playerId}`),
-        fetch(`${API.PLAYER}/players/${playerId}/pokemon`)
+        fetch(`${API.PLAYER}/players/${playerId}/monster`)
       ]);
       
       const player: Player = await playerRes.json();
-      const pokemon: PlayerPokemon[] = await pokemonRes.json();
+      const monster: PlayerPokemon[] = await monsterRes.json();
       
       setCurrentPlayer(player);
-      setPlayerPokemon(pokemon);
+      setPlayerPokemon(monster);
       setView('profile');
     } catch (error) {
       console.error('Error selecting player:', error);
     }
   };
 
-  const addPokemonToPlayer = async (pokemonId: number) => {
+  const addPokemonToPlayer = async (monsterId: number) => {
     if (!currentPlayer) return;
     
-    const pokemonData = pokemon.find(p => p.id === pokemonId);
-    if (!pokemonData) return;
+    const monsterData = monster.find(p => p.id === monsterId);
+    if (!monsterData) return;
 
     try {
-      const response = await fetch(`${API.PLAYER}/players/${currentPlayer.id}/pokemon`, {
+      const response = await fetch(`${API.PLAYER}/players/${currentPlayer.id}/monster`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          pokemon_id: pokemonId,
-          nickname: pokemonData.name,
+          monster_id: monsterId,
+          nickname: monsterData.name,
           level: 1,
-          hp: pokemonData.base_hp,
-          attack: pokemonData.base_attack,
-          defense: pokemonData.base_defense,
-          speed: pokemonData.base_speed
+          hp: monsterData.base_hp,
+          attack: monsterData.base_attack,
+          defense: monsterData.base_defense,
+          speed: monsterData.base_speed
         })
       });
       
@@ -222,8 +222,8 @@ const App: React.FC = () => {
         body: JSON.stringify({
           player1_id: currentPlayer.id,
           player2_id: opponentId,
-          pokemon1_id: myPokemonId,
-          pokemon2_id: opponentPokemonId
+          monster1_id: myPokemonId,
+          monster2_id: opponentPokemonId
         })
       });
       
@@ -264,7 +264,7 @@ const App: React.FC = () => {
           <ProfileView 
             currentPlayer={currentPlayer} 
             playerPokemon={playerPokemon} 
-            pokemon={pokemon} 
+            monster={monster} 
             addPokemonToPlayer={addPokemonToPlayer} 
             setView={setView} 
           />
@@ -369,10 +369,10 @@ const HomeView: React.FC<{
 const ProfileView: React.FC<{
   currentPlayer: Player;
   playerPokemon: PlayerPokemon[];
-  pokemon: Pokemon[];
-  addPokemonToPlayer: (pokemonId: number) => void;
+  monster: Pokemon[];
+  addPokemonToPlayer: (monsterId: number) => void;
   setView: (view: View) => void;
-}> = ({ currentPlayer, playerPokemon, pokemon, addPokemonToPlayer, setView }) => {
+}> = ({ currentPlayer, playerPokemon, monster, addPokemonToPlayer, setView }) => {
   const [showAdd, setShowAdd] = useState(false);
 
   return (
@@ -398,17 +398,17 @@ const ProfileView: React.FC<{
         </div>
 
         {showAdd && (
-          <div className="add-pokemon">
+          <div className="add-monster">
             <h4 className="section-title">Available Pokémon</h4>
-            <div className="pokemon-grid">
-              {pokemon.map(p => (
+            <div className="monster-grid">
+              {monster.map(p => (
                 <div 
                   key={p.id} 
                   onClick={() => { addPokemonToPlayer(p.id); setShowAdd(false); }} 
-                  className="pokemon-card"
+                  className="monster-card"
                 >
-                  <p className="pokemon-name">{p.name}</p>
-                  <p className="pokemon-type">{p.type1}</p>
+                  <p className="monster-name">{p.name}</p>
+                  <p className="monster-type">{p.type1}</p>
                 </div>
               ))}
             </div>
@@ -454,9 +454,9 @@ const BattleView: React.FC<{
   const selectOpponent = async (opponentId: number) => {
     setSelectedOpponent(opponentId);
     try {
-      const response = await fetch(`${API.PLAYER}/players/${opponentId}/pokemon`);
-      const pokemon: PlayerPokemon[] = await response.json();
-      setOpponentPokemon(pokemon);
+      const response = await fetch(`${API.PLAYER}/players/${opponentId}/monster`);
+      const monster: PlayerPokemon[] = await response.json();
+      setOpponentPokemon(monster);
     } catch (error) {
       console.error('Error fetching opponent Pokemon:', error);
     }

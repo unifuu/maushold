@@ -59,11 +59,11 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: pokemon-db
+  name: monster-db
   namespace: maushold
 spec:
   selector:
-    app: pokemon-db
+    app: monster-db
   ports:
     - port: 5432
       targetPort: 5432
@@ -71,18 +71,18 @@ spec:
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: pokemon-db
+  name: monster-db
   namespace: maushold
 spec:
-  serviceName: pokemon-db
+  serviceName: monster-db
   replicas: 1
   selector:
     matchLabels:
-      app: pokemon-db
+      app: monster-db
   template:
     metadata:
       labels:
-        app: pokemon-db
+        app: monster-db
     spec:
       containers:
       - name: postgres
@@ -91,7 +91,7 @@ spec:
         - containerPort: 5432
         env:
         - name: POSTGRES_DB
-          value: "pokemon_db"
+          value: "monster_db"
         - name: POSTGRES_USER
           valueFrom:
             secretKeyRef:
@@ -103,11 +103,11 @@ spec:
               name: maushold-secrets
               key: DB_PASSWORD
         volumeMounts:
-        - name: pokemon-db-data
+        - name: monster-db-data
           mountPath: /var/lib/postgresql/data
   volumeClaimTemplates:
   - metadata:
-      name: pokemon-db-data
+      name: monster-db-data
     spec:
       accessModes: [ "ReadWriteOnce" ]
       resources:

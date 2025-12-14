@@ -1,4 +1,4 @@
-module maushold/pokemon-service
+module maushold/monster-service
 
 go 1.25.3
 

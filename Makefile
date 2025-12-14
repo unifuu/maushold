@@ -1,6 +1,6 @@
 # Maushold Microservices Makefile
 
-.PHONY: help build-all build-player build-pokemon build-battle build-ranking \
+.PHONY: help build-all build-player build-monster build-battle build-ranking \
         docker-up docker-down docker-logs \
         k8s-deploy k8s-status k8s-logs k8s-cleanup \
         test lint tidy clean
@@ -18,7 +18,7 @@ help:
 	@echo "Build Commands:"
 	@echo "  make build-all          - Build all service images"
 	@echo "  make build-player       - Build player service"
-	@echo "  make build-pokemon      - Build pokemon service"
+	@echo "  make build-monster      - Build monster service"
 	@echo "  make build-battle       - Build battle service"
 	@echo "  make build-ranking      - Build ranking service"
 	@echo ""
@@ -40,7 +40,7 @@ help:
 	@echo "  make rabbitmq-ui        - Port-forward RabbitMQ UI (localhost:15672)"
 
 # Variables
-SERVICES = player-service pokemon-service battle-service ranking-service
+SERVICES = player-service monster-service battle-service ranking-service
 NAMESPACE = maushold
 IMAGE_TAG ?= latest
 
@@ -71,16 +71,16 @@ else
 endif
 
 # Build Commands
-build-all: build-player build-pokemon build-battle build-ranking
+build-all: build-player build-monster build-battle build-ranking
 	@echo "✅ All services built successfully!"
 
 build-player:
 	@echo "🔨 Building player-service..."
 	cd services/player-service && docker build -t maushold/player-service:$(IMAGE_TAG) .
 
-build-pokemon:
-	@echo "🔨 Building pokemon-service..."
-	cd services/pokemon-service && docker build -t maushold/pokemon-service:$(IMAGE_TAG) .
+build-monster:
+	@echo "🔨 Building monster-service..."
+	cd services/monster-service && docker build -t maushold/monster-service:$(IMAGE_TAG) .
 
 build-battle:
 	@echo "🔨 Building battle-service..."
@@ -105,7 +105,7 @@ k8s-deploy: build-all
 	sleep 30
 	@echo "⏳ Deploying services..."
 	kubectl apply -f k8s/player-service.yaml
-	kubectl apply -f k8s/pokemon-service.yaml
+	kubectl apply -f k8s/monster-service.yaml
 	kubectl apply -f k8s/battle-service.yaml
 	kubectl apply -f k8s/ranking-service.yaml
 	@echo "✅ Deployment complete!"

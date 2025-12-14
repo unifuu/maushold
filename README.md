@@ -1,9 +1,5 @@
 # Maushold
 
-<p align="left">
-    <img src="https://github.com/unifuu/rotom/blob/main/assets/maushold.png?raw=true" width="10%">
-</p>
-
 Tryna make a microservices demo.
 
 ## Project Strucrture
@@ -11,7 +7,7 @@ Tryna make a microservices demo.
 ```
 ├── services/
 │   ├── player-service/
-│   ├── pokemon-service/
+│   ├── monster-service/
 │   ├── battle-service/
 │   └── ranking-service/
 ├── frontend/
