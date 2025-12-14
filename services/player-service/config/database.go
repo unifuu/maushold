@@ -20,7 +20,7 @@ func InitDB(cfg *Config) *gorm.DB {
 	}
 
 	// Auto migrate
-	err = db.AutoMigrate(&model.Player{}, &model.PlayerPokemon{})
+	err = db.AutoMigrate(&model.Player{}, &model.PlayerMonster{})
 	if err != nil {
 		log.Fatal("Failed to migrate database:", err)
 	}

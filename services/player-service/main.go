@@ -42,11 +42,11 @@ func main() {
 
 	// Initialize repositories
 	playerRepo := repository.NewPlayerRepository(db)
-	playerPokemonRepo := repository.NewPlayerPokemonRepository(db)
+	playerMonsterRepo := repository.NewPlayerMonsterRepository(db)
 
 	// Initialize services
 	playerService := service.NewPlayerService(playerRepo, redisClient)
-	playerPokemonService := service.NewPlayerPokemonService(playerPokemonRepo, redisClient)
+	playerMonsterService := service.NewPlayerMonsterService(playerMonsterRepo, redisClient)
 
 	// Initialize messaging
 	messageProducer := messaging.NewProducer(rabbitCh)
@@ -56,7 +56,7 @@ func main() {
 	go messageConsumer.Start()
 
 	// Initialize handlers
-	playerHandler := handler.NewPlayerHandler(playerService, playerPokemonService, messageProducer)
+	playerHandler := handler.NewPlayerHandler(playerService, playerMonsterService, messageProducer)
 
 	// Setup routes
 	router := mux.NewRouter()

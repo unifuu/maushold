@@ -40,12 +40,12 @@ func NewBattleService(
 }
 
 func (s *battleService) CreateBattle(player1ID, player2ID, monster1ID, monster2ID uint) (*model.Battle, error) {
-	monster1, err := s.playerClient.GetPlayerPokemon(player1ID, monster1ID)
+	monster1, err := s.playerClient.GetPlayerMonster(player1ID, monster1ID)
 	if err != nil {
 		return nil, errors.New("monster 1 not found")
 	}
 
-	monster2, err := s.playerClient.GetPlayerPokemon(player2ID, monster2ID)
+	monster2, err := s.playerClient.GetPlayerMonster(player2ID, monster2ID)
 	if err != nil {
 		return nil, errors.New("monster 2 not found")
 	}
@@ -53,8 +53,8 @@ func (s *battleService) CreateBattle(player1ID, player2ID, monster1ID, monster2I
 	battle := &model.Battle{
 		Player1ID:  player1ID,
 		Player2ID:  player2ID,
-		Pokemon1ID: monster1ID,
-		Pokemon2ID: monster2ID,
+		Monster1ID: monster1ID,
+		Monster2ID: monster2ID,
 		Status:     "in_progress",
 	}
 

@@ -6,32 +6,32 @@ import (
 	"gorm.io/gorm"
 )
 
-type PlayerPokemonRepository interface {
-	Create(pokemon *model.PlayerPokemon) error
-	FindByPlayerID(playerID uint) ([]model.PlayerPokemon, error)
-	FindByID(id uint) (*model.PlayerPokemon, error)
+type PlayerMonsterRepository interface {
+	Create(monster *model.PlayerMonster) error
+	FindByPlayerID(playerID uint) ([]model.PlayerMonster, error)
+	FindByID(id uint) (*model.PlayerMonster, error)
 }
 
-type playerPokemonRepository struct {
+type playerMonsterRepository struct {
 	db *gorm.DB
 }
 
-func NewPlayerPokemonRepository(db *gorm.DB) PlayerPokemonRepository {
-	return &playerPokemonRepository{db: db}
+func NewPlayerMonsterRepository(db *gorm.DB) PlayerMonsterRepository {
+	return &playerMonsterRepository{db: db}
 }
 
-func (r *playerPokemonRepository) Create(pokemon *model.PlayerPokemon) error {
-	return r.db.Create(pokemon).Error
+func (r *playerMonsterRepository) Create(monster *model.PlayerMonster) error {
+	return r.db.Create(monster).Error
 }
 
-func (r *playerPokemonRepository) FindByPlayerID(playerID uint) ([]model.PlayerPokemon, error) {
-	var pokemon []model.PlayerPokemon
-	err := r.db.Where("player_id = ?", playerID).Find(&pokemon).Error
-	return pokemon, err
+func (r *playerMonsterRepository) FindByPlayerID(playerID uint) ([]model.PlayerMonster, error) {
+	var monster []model.PlayerMonster
+	err := r.db.Where("player_id = ?", playerID).Find(&monster).Error
+	return monster, err
 }
 
-func (r *playerPokemonRepository) FindByID(id uint) (*model.PlayerPokemon, error) {
-	var pokemon model.PlayerPokemon
-	err := r.db.First(&pokemon, id).Error
-	return &pokemon, err
+func (r *playerMonsterRepository) FindByID(id uint) (*model.PlayerMonster, error) {
+	var monster model.PlayerMonster
+	err := r.db.First(&monster, id).Error
+	return &monster, err
 }

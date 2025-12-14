@@ -13,7 +13,7 @@ func NewBattleEngine() *BattleEngine {
 	return &BattleEngine{}
 }
 
-func (e *BattleEngine) SimulateBattle(p1, p2 *model.PlayerPokemon) (int, string) {
+func (e *BattleEngine) SimulateBattle(p1, p2 *model.PlayerMonster) (int, string) {
 	log := ""
 	hp1 := p1.HP
 	hp2 := p2.HP

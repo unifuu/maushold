@@ -17,8 +17,8 @@ func SetupPlayerRoutes(router *mux.Router, handler *handler.PlayerHandler) {
 	router.HandleFunc("/players/{id}", handler.GetPlayer).Methods(http.MethodGet)
 	router.HandleFunc("/players/{id}", handler.UpdatePlayer).Methods(http.MethodPut)
 	router.HandleFunc("/players", handler.GetAllPlayers).Methods(http.MethodGet)
-	router.HandleFunc("/players/{id}/pokemon", handler.GetPlayerPokemon).Methods(http.MethodGet)
-	router.HandleFunc("/players/{id}/pokemon", handler.AddPokemonToPlayer).Methods(http.MethodPost)
+	router.HandleFunc("/players/{id}/monster", handler.GetPlayerMonster).Methods(http.MethodGet)
+	router.HandleFunc("/players/{id}/monster", handler.AddMonsterToPlayer).Methods(http.MethodPost)
 	router.HandleFunc("/health", handler.HealthCheck).Methods(http.MethodGet)
 
 	// Handle preflight requests for all routes

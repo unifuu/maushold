@@ -27,8 +27,8 @@ func (h *BattleHandler) CreateBattle(w http.ResponseWriter, r *http.Request) {
 	var req struct {
 		Player1ID  uint `json:"player1_id"`
 		Player2ID  uint `json:"player2_id"`
-		Pokemon1ID uint `json:"monster1_id"`
-		Pokemon2ID uint `json:"monster2_id"`
+		Monster1ID uint `json:"monster1_id"`
+		Monster2ID uint `json:"monster2_id"`
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -36,7 +36,7 @@ func (h *BattleHandler) CreateBattle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	battle, err := h.battleService.CreateBattle(req.Player1ID, req.Player2ID, req.Pokemon1ID, req.Pokemon2ID)
+	battle, err := h.battleService.CreateBattle(req.Player1ID, req.Player2ID, req.Monster1ID, req.Monster2ID)
 	if err != nil {
 		respondError(w, http.StatusInternalServerError, err.Error())
 		return

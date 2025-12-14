@@ -15,14 +15,14 @@ func NewProducer(channel *amqp.Channel) *Producer {
 	return &Producer{channel: channel}
 }
 
-func (p *Producer) PublishPokemonEvent(routingKey string, data interface{}) error {
+func (p *Producer) PublishMonsterEvent(routingKey string, data interface{}) error {
 	body, err := json.Marshal(data)
 	if err != nil {
 		return err
 	}
 
 	err = p.channel.Publish(
-		"pokemon.events",
+		"monster.events",
 		routingKey,
 		false,
 		false,

@@ -12,20 +12,20 @@ import (
 	"github.com/go-redis/redis/v8"
 )
 
-type PokemonService interface {
-	CreatePokemon(monster *model.Pokemon) error
-	GetPokemon(id int) (*model.Pokemon, error)
-	GetAllPokemon() ([]model.Pokemon, error)
-	GetRandomPokemon() (*model.Pokemon, error)
+type MonsterService interface {
+	CreateMonster(monster *model.Monster) error
+	GetMonster(id int) (*model.Monster, error)
+	GetAllMonster() ([]model.Monster, error)
+	GetRandomMonster() (*model.Monster, error)
 }
 
 type monsterService struct {
-	repo  repository.PokemonRepository
+	repo  repository.MonsterRepository
 	redis *redis.Client
 	ctx   context.Context
 }
 
-func NewPokemonService(repo repository.PokemonRepository, redisClient *redis.Client) PokemonService {
+func NewMonsterService(repo repository.MonsterRepository, redisClient *redis.Client) MonsterService {
 	return &monsterService{
 		repo:  repo,
 		redis: redisClient,
@@ -33,7 +33,7 @@ func NewPokemonService(repo repository.PokemonRepository, redisClient *redis.Cli
 	}
 }
 
-func (s *monsterService) CreatePokemon(monster *model.Pokemon) error {
+func (s *monsterService) CreateMonster(monster *model.Monster) error {
 	err := s.repo.Create(monster)
 	if err != nil {
 		return err
@@ -43,12 +43,12 @@ func (s *monsterService) CreatePokemon(monster *model.Pokemon) error {
 	return nil
 }
 
-func (s *monsterService) GetPokemon(id int) (*model.Pokemon, error) {
+func (s *monsterService) GetMonster(id int) (*model.Monster, error) {
 	cacheKey := fmt.Sprintf("monster:%d", id)
 
 	cached, err := s.redis.Get(s.ctx, cacheKey).Result()
 	if err == nil {
-		var monster model.Pokemon
+		var monster model.Monster
 		if json.Unmarshal([]byte(cached), &monster) == nil {
 			return &monster, nil
 		}
@@ -65,10 +65,10 @@ func (s *monsterService) GetPokemon(id int) (*model.Pokemon, error) {
 	return monster, nil
 }
 
-func (s *monsterService) GetAllPokemon() ([]model.Pokemon, error) {
+func (s *monsterService) GetAllMonster() ([]model.Monster, error) {
 	cached, err := s.redis.Get(s.ctx, "monster:all").Result()
 	if err == nil {
-		var monster []model.Pokemon
+		var monster []model.Monster
 		if json.Unmarshal([]byte(cached), &monster) == nil {
 			return monster, nil
 		}
@@ -85,6 +85,6 @@ func (s *monsterService) GetAllPokemon() ([]model.Pokemon, error) {
 	return monster, nil
 }
 
-func (s *monsterService) GetRandomPokemon() (*model.Pokemon, error) {
+func (s *monsterService) GetRandomMonster() (*model.Monster, error) {
 	return s.repo.GetRandom()
 }

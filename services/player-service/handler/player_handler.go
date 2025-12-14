@@ -14,18 +14,18 @@ import (
 
 type PlayerHandler struct {
 	playerService        service.PlayerService
-	playerPokemonService service.PlayerPokemonService
+	playerMonsterService service.PlayerMonsterService
 	messageProducer      *messaging.Producer
 }
 
 func NewPlayerHandler(
 	playerService service.PlayerService,
-	playerPokemonService service.PlayerPokemonService,
+	playerMonsterService service.PlayerMonsterService,
 	messageProducer *messaging.Producer,
 ) *PlayerHandler {
 	return &PlayerHandler{
 		playerService:        playerService,
-		playerPokemonService: playerPokemonService,
+		playerMonsterService: playerMonsterService,
 		messageProducer:      messageProducer,
 	}
 }
@@ -110,7 +110,7 @@ func (h *PlayerHandler) GetAllPlayers(w http.ResponseWriter, r *http.Request) {
 	respondJSON(w, http.StatusOK, players)
 }
 
-func (h *PlayerHandler) GetPlayerPokemon(w http.ResponseWriter, r *http.Request) {
+func (h *PlayerHandler) GetPlayerMonster(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, err := strconv.ParseUint(vars["id"], 10, 32)
 	if err != nil {
@@ -118,16 +118,16 @@ func (h *PlayerHandler) GetPlayerPokemon(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	pokemon, err := h.playerPokemonService.GetPlayerPokemon(uint(id))
+	monster, err := h.playerMonsterService.GetPlayerMonster(uint(id))
 	if err != nil {
 		respondError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	respondJSON(w, http.StatusOK, pokemon)
+	respondJSON(w, http.StatusOK, monster)
 }
 
-func (h *PlayerHandler) AddPokemonToPlayer(w http.ResponseWriter, r *http.Request) {
+func (h *PlayerHandler) AddMonsterToPlayer(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, err := strconv.ParseUint(vars["id"], 10, 32)
 	if err != nil {
@@ -135,21 +135,21 @@ func (h *PlayerHandler) AddPokemonToPlayer(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	var pokemon model.PlayerPokemon
-	if err := json.NewDecoder(r.Body).Decode(&pokemon); err != nil {
+	var monster model.PlayerMonster
+	if err := json.NewDecoder(r.Body).Decode(&monster); err != nil {
 		respondError(w, http.StatusBadRequest, "Invalid request payload")
 		return
 	}
 
-	pokemon.PlayerID = uint(id)
-	if err := h.playerPokemonService.AddPokemonToPlayer(&pokemon); err != nil {
+	monster.PlayerID = uint(id)
+	if err := h.playerMonsterService.AddMonsterToPlayer(&monster); err != nil {
 		respondError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	h.messageProducer.PublishPlayerEvent("player.pokemon.added", pokemon)
+	h.messageProducer.PublishPlayerEvent("player.monster.added", monster)
 
-	respondJSON(w, http.StatusCreated, pokemon)
+	respondJSON(w, http.StatusCreated, monster)
 }
 
 func (h *PlayerHandler) HealthCheck(w http.ResponseWriter, r *http.Request) {

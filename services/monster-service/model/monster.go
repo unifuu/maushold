@@ -2,7 +2,7 @@ package model
 
 import "time"
 
-type Pokemon struct {
+type Monster struct {
 	ID          int       `gorm:"primaryKey" json:"id"`
 	Name        string    `gorm:"unique;not null" json:"name"`
 	Type1       string    `gorm:"not null" json:"type1"`

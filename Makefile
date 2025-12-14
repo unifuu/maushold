@@ -50,7 +50,7 @@ docker-up:
 	docker-compose up --build -d
 	@echo "✅ Services started! Access at:"
 	@echo "   Player:  http://localhost:8001"
-	@echo "   Pokemon: http://localhost:8002"
+	@echo "   Monster: http://localhost:8002"
 	@echo "   Battle:  http://localhost:8003"
 	@echo "   Ranking: http://localhost:8004"
 	@echo "   Frontend: http://localhost:3000"
@@ -113,7 +113,7 @@ k8s-deploy: build-all
 	@echo "Check status with: make k8s-status"
 	@echo "Access services at:"
 	@echo "   Player:  http://localhost:30001"
-	@echo "   Pokemon: http://localhost:30002"
+	@echo "   Monster: http://localhost:30002"
 	@echo "   Battle:  http://localhost:30003"
 	@echo "   Ranking: http://localhost:30004"
 

@@ -7,27 +7,27 @@ import (
 	"github.com/go-redis/redis/v8"
 )
 
-type PlayerPokemonService interface {
-	AddPokemonToPlayer(pokemon *model.PlayerPokemon) error
-	GetPlayerPokemon(playerID uint) ([]model.PlayerPokemon, error)
+type PlayerMonsterService interface {
+	AddMonsterToPlayer(monster *model.PlayerMonster) error
+	GetPlayerMonster(playerID uint) ([]model.PlayerMonster, error)
 }
 
-type playerPokemonService struct {
-	repo  repository.PlayerPokemonRepository
+type playerMonsterService struct {
+	repo  repository.PlayerMonsterRepository
 	redis *redis.Client
 }
 
-func NewPlayerPokemonService(repo repository.PlayerPokemonRepository, redisClient *redis.Client) PlayerPokemonService {
-	return &playerPokemonService{
+func NewPlayerMonsterService(repo repository.PlayerMonsterRepository, redisClient *redis.Client) PlayerMonsterService {
+	return &playerMonsterService{
 		repo:  repo,
 		redis: redisClient,
 	}
 }
 
-func (s *playerPokemonService) AddPokemonToPlayer(pokemon *model.PlayerPokemon) error {
-	return s.repo.Create(pokemon)
+func (s *playerMonsterService) AddMonsterToPlayer(monster *model.PlayerMonster) error {
+	return s.repo.Create(monster)
 }
 
-func (s *playerPokemonService) GetPlayerPokemon(playerID uint) ([]model.PlayerPokemon, error) {
+func (s *playerMonsterService) GetPlayerMonster(playerID uint) ([]model.PlayerMonster, error) {
 	return s.repo.FindByPlayerID(playerID)
 }

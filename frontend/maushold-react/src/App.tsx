@@ -16,7 +16,7 @@ interface Player {
   updated_at: string;
 }
 
-interface Pokemon {
+interface Monster {
   id: number;
   name: string;
   type1: string;
@@ -28,7 +28,7 @@ interface Pokemon {
   description?: string;
 }
 
-interface PlayerPokemon {
+interface PlayerMonster {
   id: number;
   player_id: number;
   monster_id: number;
@@ -70,8 +70,8 @@ const App: React.FC = () => {
   const [view, setView] = useState<View>('home');
   const [currentPlayer, setCurrentPlayer] = useState<Player | null>(null);
   const [players, setPlayers] = useState<Player[]>([]);
-  const [monster, setPokemon] = useState<Pokemon[]>([]);
-  const [playerPokemon, setPlayerPokemon] = useState<PlayerPokemon[]>([]);
+  const [monster, setMonster] = useState<Monster[]>([]);
+  const [playerMonster, setPlayerMonster] = useState<PlayerMonster[]>([]);
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [recentBattles, setRecentBattles] = useState<Battle[]>([]);
   const [loading, setLoading] = useState(false);
@@ -94,7 +94,7 @@ const App: React.FC = () => {
       ]);
       
       console.log('Players response status:', playersRes.status);
-      console.log('Pokemon response status:', monsterRes.status);
+      console.log('Monster response status:', monsterRes.status);
       
       if (playersRes.ok) {
         const playersData = await playersRes.json();
@@ -108,10 +108,10 @@ const App: React.FC = () => {
       if (monsterRes.ok) {
         const monsterData = await monsterRes.json();
         console.log('Loaded monster:', monsterData);
-        setPokemon(monsterData || []);
+        setMonster(monsterData || []);
       } else {
         console.error('Failed to load monster:', monsterRes.status, await monsterRes.text());
-        setPokemon([]);
+        setMonster([]);
       }
 
       // Try to load leaderboard (ranking service might not be running)
@@ -128,7 +128,7 @@ const App: React.FC = () => {
     } catch (error) {
       console.error('Error loading data:', error);
       setPlayers([]);
-      setPokemon([]);
+      setMonster([]);
       setLeaderboard([]);
     } finally {
       setDataLoading(false);
@@ -173,17 +173,17 @@ const App: React.FC = () => {
       ]);
       
       const player: Player = await playerRes.json();
-      const monster: PlayerPokemon[] = await monsterRes.json();
+      const monster: PlayerMonster[] = await monsterRes.json();
       
       setCurrentPlayer(player);
-      setPlayerPokemon(monster);
+      setPlayerMonster(monster);
       setView('profile');
     } catch (error) {
       console.error('Error selecting player:', error);
     }
   };
 
-  const addPokemonToPlayer = async (monsterId: number) => {
+  const addMonsterToPlayer = async (monsterId: number) => {
     if (!currentPlayer) return;
     
     const monsterData = monster.find(p => p.id === monsterId);
@@ -204,14 +204,14 @@ const App: React.FC = () => {
         })
       });
       
-      const newPokemon: PlayerPokemon = await response.json();
-      setPlayerPokemon([...playerPokemon, newPokemon]);
+      const newMonster: PlayerMonster = await response.json();
+      setPlayerMonster([...playerMonster, newMonster]);
     } catch (error) {
-      console.error('Error adding Pokemon:', error);
+      console.error('Error adding Monster:', error);
     }
   };
 
-  const startBattle = async (opponentId: number, myPokemonId: number, opponentPokemonId: number) => {
+  const startBattle = async (opponentId: number, myMonsterId: number, opponentMonsterId: number) => {
     if (!currentPlayer) return;
     
     setLoading(true);
@@ -222,8 +222,8 @@ const App: React.FC = () => {
         body: JSON.stringify({
           player1_id: currentPlayer.id,
           player2_id: opponentId,
-          monster1_id: myPokemonId,
-          monster2_id: opponentPokemonId
+          monster1_id: myMonsterId,
+          monster2_id: opponentMonsterId
         })
       });
       
@@ -263,16 +263,16 @@ const App: React.FC = () => {
         {view === 'profile' && currentPlayer && (
           <ProfileView 
             currentPlayer={currentPlayer} 
-            playerPokemon={playerPokemon} 
+            playerMonster={playerMonster} 
             monster={monster} 
-            addPokemonToPlayer={addPokemonToPlayer} 
+            addMonsterToPlayer={addMonsterToPlayer} 
             setView={setView} 
           />
         )}
         {view === 'battle' && currentPlayer && (
           <BattleView 
             currentPlayer={currentPlayer} 
-            playerPokemon={playerPokemon} 
+            playerMonster={playerMonster} 
             players={players} 
             startBattle={startBattle} 
             loading={loading} 
@@ -368,11 +368,11 @@ const HomeView: React.FC<{
 // Profile View Component
 const ProfileView: React.FC<{
   currentPlayer: Player;
-  playerPokemon: PlayerPokemon[];
-  monster: Pokemon[];
-  addPokemonToPlayer: (monsterId: number) => void;
+  playerMonster: PlayerMonster[];
+  monster: Monster[];
+  addMonsterToPlayer: (monsterId: number) => void;
   setView: (view: View) => void;
-}> = ({ currentPlayer, playerPokemon, monster, addPokemonToPlayer, setView }) => {
+}> = ({ currentPlayer, playerMonster, monster, addMonsterToPlayer, setView }) => {
   const [showAdd, setShowAdd] = useState(false);
 
   return (
@@ -389,7 +389,7 @@ const ProfileView: React.FC<{
             <button onClick={() => setShowAdd(!showAdd)} className="btn-primary">
               Add Pokémon
             </button>
-            {playerPokemon.length >= 1 && (
+            {playerMonster.length >= 1 && (
               <button onClick={() => setView('battle')} className="btn-battle">
                 ⚔️ Battle!
               </button>
@@ -404,7 +404,7 @@ const ProfileView: React.FC<{
               {monster.map(p => (
                 <div 
                   key={p.id} 
-                  onClick={() => { addPokemonToPlayer(p.id); setShowAdd(false); }} 
+                  onClick={() => { addMonsterToPlayer(p.id); setShowAdd(false); }} 
                   className="monster-card"
                 >
                   <p className="monster-name">{p.name}</p>
@@ -415,11 +415,11 @@ const ProfileView: React.FC<{
           </div>
         )}
 
-        {playerPokemon.length === 0 ? (
+        {playerMonster.length === 0 ? (
           <p className="empty-message">No Pokémon yet. Add some to your team!</p>
         ) : (
           <div className="team-grid">
-            {playerPokemon.map(p => (
+            {playerMonster.map(p => (
               <div key={p.id} className="team-card">
                 <h4 className="team-name">{p.nickname}</h4>
                 <div className="stats">
@@ -441,28 +441,28 @@ const ProfileView: React.FC<{
 // Battle View Component
 const BattleView: React.FC<{
   currentPlayer: Player;
-  playerPokemon: PlayerPokemon[];
+  playerMonster: PlayerMonster[];
   players: Player[];
-  startBattle: (opponentId: number, myPokemonId: number, opponentPokemonId: number) => void;
+  startBattle: (opponentId: number, myMonsterId: number, opponentMonsterId: number) => void;
   loading: boolean;
-}> = ({ currentPlayer, playerPokemon, players, startBattle, loading }) => {
-  const [selectedMyPokemon, setSelectedMyPokemon] = useState<number | null>(null);
+}> = ({ currentPlayer, playerMonster, players, startBattle, loading }) => {
+  const [selectedMyMonster, setSelectedMyMonster] = useState<number | null>(null);
   const [selectedOpponent, setSelectedOpponent] = useState<number | null>(null);
-  const [opponentPokemon, setOpponentPokemon] = useState<PlayerPokemon[]>([]);
-  const [selectedOpponentPokemon, setSelectedOpponentPokemon] = useState<number | null>(null);
+  const [opponentMonster, setOpponentMonster] = useState<PlayerMonster[]>([]);
+  const [selectedOpponentMonster, setSelectedOpponentMonster] = useState<number | null>(null);
 
   const selectOpponent = async (opponentId: number) => {
     setSelectedOpponent(opponentId);
     try {
       const response = await fetch(`${API.PLAYER}/players/${opponentId}/monster`);
-      const monster: PlayerPokemon[] = await response.json();
-      setOpponentPokemon(monster);
+      const monster: PlayerMonster[] = await response.json();
+      setOpponentMonster(monster);
     } catch (error) {
-      console.error('Error fetching opponent Pokemon:', error);
+      console.error('Error fetching opponent Monster:', error);
     }
   };
 
-  const canBattle = selectedMyPokemon && selectedOpponent && selectedOpponentPokemon;
+  const canBattle = selectedMyMonster && selectedOpponent && selectedOpponentMonster;
 
   return (
     <div className="view">
@@ -472,11 +472,11 @@ const BattleView: React.FC<{
         <div className="battle-side blue">
           <h3 className="side-title">Your Pokémon</h3>
           <div className="selection-list">
-            {playerPokemon.map(p => (
+            {playerMonster.map(p => (
               <div 
                 key={p.id} 
-                onClick={() => setSelectedMyPokemon(p.id)} 
-                className={`selection-item ${selectedMyPokemon === p.id ? 'selected' : ''}`}
+                onClick={() => setSelectedMyMonster(p.id)} 
+                className={`selection-item ${selectedMyMonster === p.id ? 'selected' : ''}`}
               >
                 <p className="selection-name">{p.nickname}</p>
                 <p className="selection-stats">HP: {p.hp} | ATK: {p.attack} | DEF: {p.defense}</p>
@@ -498,13 +498,13 @@ const BattleView: React.FC<{
                   <p className="selection-stats">⭐ {p.points} points</p>
                 </div>
                 
-                {selectedOpponent === p.id && opponentPokemon.length > 0 && (
+                {selectedOpponent === p.id && opponentMonster.length > 0 && (
                   <div className="sub-selection">
-                    {opponentPokemon.map(op => (
+                    {opponentMonster.map(op => (
                       <div 
                         key={op.id} 
-                        onClick={() => setSelectedOpponentPokemon(op.id)} 
-                        className={`sub-item ${selectedOpponentPokemon === op.id ? 'selected' : ''}`}
+                        onClick={() => setSelectedOpponentMonster(op.id)} 
+                        className={`sub-item ${selectedOpponentMonster === op.id ? 'selected' : ''}`}
                       >
                         {op.nickname} (HP: {op.hp})
                       </div>
@@ -519,8 +519,8 @@ const BattleView: React.FC<{
 
       <div className="battle-action">
         <button 
-          onClick={() => selectedMyPokemon && selectedOpponent && selectedOpponentPokemon && 
-                        startBattle(selectedOpponent, selectedMyPokemon, selectedOpponentPokemon)} 
+          onClick={() => selectedMyMonster && selectedOpponent && selectedOpponentMonster && 
+                        startBattle(selectedOpponent, selectedMyMonster, selectedOpponentMonster)} 
           disabled={!canBattle || loading} 
           className={`btn-battle-start ${!canBattle || loading ? 'disabled' : ''}`}
         >

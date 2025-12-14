@@ -3,20 +3,20 @@ package routes
 import (
 	"net/http"
 
-	"maushold/pokemon-service/handler"
+	"maushold/monster-service/handler"
 
 	"github.com/gorilla/mux"
 )
 
-func SetupPokemonRoutes(router *mux.Router, handler *handler.PokemonHandler) {
+func SetupMonsterRoutes(router *mux.Router, handler *handler.MonsterHandler) {
 	// CORS middleware - apply first
 	router.Use(corsMiddleware)
 
 	// API routes
-	router.HandleFunc("/pokemon", handler.CreatePokemon).Methods(http.MethodPost)
-	router.HandleFunc("/pokemon/{id}", handler.GetPokemon).Methods(http.MethodGet)
-	router.HandleFunc("/pokemon", handler.GetAllPokemon).Methods(http.MethodGet)
-	router.HandleFunc("/pokemon/random", handler.GetRandomPokemon).Methods(http.MethodGet)
+	router.HandleFunc("/monster", handler.CreateMonster).Methods(http.MethodPost)
+	router.HandleFunc("/monster/{id}", handler.GetMonster).Methods(http.MethodGet)
+	router.HandleFunc("/monster", handler.GetAllMonster).Methods(http.MethodGet)
+	router.HandleFunc("/monster/random", handler.GetRandomMonster).Methods(http.MethodGet)
 	router.HandleFunc("/health", handler.HealthCheck).Methods(http.MethodGet)
 
 	// Handle preflight requests for all routes

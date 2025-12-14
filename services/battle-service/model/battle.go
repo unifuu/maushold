@@ -6,8 +6,8 @@ type Battle struct {
 	ID          uint       `gorm:"primaryKey" json:"id"`
 	Player1ID   uint       `gorm:"not null;index" json:"player1_id"`
 	Player2ID   uint       `gorm:"not null;index" json:"player2_id"`
-	Pokemon1ID  uint       `gorm:"not null" json:"monster1_id"`
-	Pokemon2ID  uint       `gorm:"not null" json:"monster2_id"`
+	Monster1ID  uint       `gorm:"not null" json:"monster1_id"`
+	Monster2ID  uint       `gorm:"not null" json:"monster2_id"`
 	WinnerID    uint       `json:"winner_id"`
 	Status      string     `gorm:"default:'pending'" json:"status"`
 	BattleLog   string     `gorm:"type:text" json:"battle_log"`
@@ -17,7 +17,7 @@ type Battle struct {
 	CompletedAt *time.Time `json:"completed_at"`
 }
 
-type PlayerPokemon struct {
+type PlayerMonster struct {
 	ID       uint   `json:"id"`
 	PlayerID uint   `json:"player_id"`
 	Nickname string `json:"nickname"`

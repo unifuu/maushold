@@ -14,7 +14,7 @@ type Config struct {
 	ServicePort       string
 	ConsulAddr        string
 	PlayerServiceURL  string
-	PokemonServiceURL string
+	MonsterServiceURL string
 }
 
 func LoadConfig() *Config {
@@ -30,7 +30,7 @@ func LoadConfig() *Config {
 		ServicePort:       getEnv("SERVICE_PORT", "8003"),
 		ConsulAddr:        getEnv("CONSUL_ADDR", "consul:8500"),
 		PlayerServiceURL:  getEnv("PLAYER_SERVICE_URL", "http://player-service:8001"),
-		PokemonServiceURL: getEnv("MONSTER_SERVICE_URL", "http://monster-service:8002"),
+		MonsterServiceURL: getEnv("MONSTER_SERVICE_URL", "http://monster-service:8002"),
 	}
 }
 

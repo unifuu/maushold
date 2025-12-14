@@ -3,19 +3,19 @@ package service
 import (
 	"log"
 
-	"maushold/pokemon-service/model"
-	"maushold/pokemon-service/repository"
+	"maushold/monster-service/model"
+	"maushold/monster-service/repository"
 )
 
-func SeedPokemon(repo repository.PokemonRepository) {
+func SeedMonster(repo repository.MonsterRepository) {
 	// Check if already seeded
 	all, err := repo.FindAll()
 	if err == nil && len(all) > 0 {
-		log.Println("Pokemon data already seeded")
+		log.Println("Monster data already seeded")
 		return
 	}
 
-	starterPokemon := []model.Pokemon{
+	starterMonster := []model.Monster{
 		{ID: 1, Name: "Bulbasaur", Type1: "Grass", Type2: "Poison", BaseHP: 45, BaseAttack: 49, BaseDefense: 49, BaseSpeed: 45, Description: "A strange seed was planted on its back at birth."},
 		{ID: 4, Name: "Charmander", Type1: "Fire", Type2: "", BaseHP: 39, BaseAttack: 52, BaseDefense: 43, BaseSpeed: 65, Description: "Obviously prefers hot places."},
 		{ID: 7, Name: "Squirtle", Type1: "Water", Type2: "", BaseHP: 44, BaseAttack: 48, BaseDefense: 65, BaseSpeed: 43, Description: "After birth, its back swells and hardens into a shell."},
@@ -28,9 +28,9 @@ func SeedPokemon(repo repository.PokemonRepository) {
 		{ID: 6, Name: "Charizard", Type1: "Fire", Type2: "Flying", BaseHP: 78, BaseAttack: 84, BaseDefense: 78, BaseSpeed: 100, Description: "Spits fire that is hot enough to melt boulders."},
 	}
 
-	for _, p := range starterPokemon {
+	for _, p := range starterMonster {
 		repo.Create(&p)
 	}
 
-	log.Println("Seeded initial Pokemon data")
+	log.Println("Seeded initial Monster data")
 }

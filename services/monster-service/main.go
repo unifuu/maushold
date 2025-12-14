@@ -31,23 +31,23 @@ func main() {
 	}
 	defer config.DeregisterService(consulClient, "monster-service")
 
-	monsterRepo := repository.NewPokemonRepository(db)
-	monsterService := service.NewPokemonService(monsterRepo, redisClient)
+	monsterRepo := repository.NewMonsterRepository(db)
+	monsterService := service.NewMonsterService(monsterRepo, redisClient)
 
 	// Seed initial data
-	service.SeedPokemon(monsterRepo)
+	service.SeedMonster(monsterRepo)
 
 	messageProducer := messaging.NewProducer(rabbitCh)
-	monsterHandler := handler.NewPokemonHandler(monsterService, messageProducer)
+	monsterHandler := handler.NewMonsterHandler(monsterService, messageProducer)
 
 	router := mux.NewRouter()
-	routes.SetupPokemonRoutes(router, monsterHandler)
+	routes.SetupMonsterRoutes(router, monsterHandler)
 
 	port := os.Getenv("SERVICE_PORT")
 	if port == "" {
 		port = "8002"
 	}
 
-	log.Printf("Pokemon Service starting on port %s", port)
+	log.Printf("Monster Service starting on port %s", port)
 	log.Fatal(http.ListenAndServe(":"+port, router))
 }
