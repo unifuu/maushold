@@ -1,103 +1,81 @@
 echo "🚀 Setting up Kong API Gateway..."
+echo ""
 
-# Wait for Kong to be ready
-until curl -s http://localhost:8001/ > /dev/null 2>&1; do
-  echo "Waiting for Kong Admin API..."
+# Wait for Kong Admin API to be ready
+echo "⏳ Waiting for Kong Admin API..."
+until curl -s http://localhost:18001/ > /dev/null 2>&1; do
+  echo "   Waiting for Kong to be ready..."
   sleep 2
 done
 
 echo "✅ Kong is ready!"
+echo ""
+
+# Function to create service and route
+create_service_and_route() {
+  SERVICE_NAME=$1
+  SERVICE_URL=$2
+  ROUTE_PATH=$3
+  
+  echo "📝 Creating $SERVICE_NAME..."
+  
+  # Create service
+  curl -s -X POST http://localhost:18001/services \
+    --data "name=$SERVICE_NAME" \
+    --data "url=$SERVICE_URL" > /dev/null
+  
+  # Create route
+  curl -s -X POST http://localhost:18001/services/$SERVICE_NAME/routes \
+    --data "paths[]=$ROUTE_PATH" \
+    --data "strip_path=false" > /dev/null
+  
+  echo "   ✅ $SERVICE_NAME created at $ROUTE_PATH"
+}
 
 # Create Player Service
-echo "📝 Creating Player Service..."
-curl -i -X POST http://localhost:8001/services \
-  --data name=player-service \
-  --data url=http://player-service:8001
+create_service_and_route "player-service" "http://player-service:8001" "/players"
 
-curl -i -X POST http://localhost:8001/services/player-service/routes \
-  --data "paths[]=/api/players" \
-  --data "strip_path=false"
-
-# Create Monster Service
-echo "📝 Creating Monster Service..."
-curl -i -X POST http://localhost:8001/services \
-  --data name=monster-service \
-  --data url=http://monster-service:8002
-
-curl -i -X POST http://localhost:8001/services/monster-service/routes \
-  --data "paths[]=/api/monster" \
-  --data "strip_path=false"
+# Create Monster Service  
+create_service_and_route "monster-service" "http://monster-service:8002" "/monster"
 
 # Create Battle Service
-echo "📝 Creating Battle Service..."
-curl -i -X POST http://localhost:8001/services \
-  --data name=battle-service \
-  --data url=http://battle-service:8003
-
-curl -i -X POST http://localhost:8001/services/battle-service/routes \
-  --data "paths[]=/api/battles" \
-  --data "strip_path=false"
+create_service_and_route "battle-service" "http://battle-service:8003" "/battles"
 
 # Create Ranking Service
-echo "📝 Creating Ranking Service..."
-curl -i -X POST http://localhost:8001/services \
-  --data name=ranking-service \
-  --data url=http://ranking-service:8004
+create_service_and_route "ranking-service" "http://ranking-service:8004" "/rankings"
 
-curl -i -X POST http://localhost:8001/services/ranking-service/routes \
-  --data "paths[]=/api/rankings" \
-  --data "strip_path=false"
-
-# Add Rate Limiting Plugin (Optional)
-echo "🔌 Adding Rate Limiting..."
-curl -i -X POST http://localhost:8001/plugins \
-  --data "name=rate-limiting" \
-  --data "config.minute=100" \
-  --data "config.policy=local"
+echo ""
+echo "🔌 Adding Plugins..."
 
 # Add CORS Plugin
-echo "🔌 Adding CORS..."
-curl -i -X POST http://localhost:8001/plugins \
+curl -s -X POST http://localhost:18001/plugins \
   --data "name=cors" \
   --data "config.origins=*" \
-  --data "config.methods=GET,POST,PUT,DELETE,OPTIONS" \
-  --data "config.headers=Content-Type,Authorization"
+  --data "config.methods=GET,POST,PUT,DELETE,OPTIONS,PATCH" \
+  --data "config.headers=Content-Type,Authorization" \
+  --data "config.credentials=true" \
+  --data "config.max_age=3600" > /dev/null
 
-# Add Request/Response Logging (Optional)
-echo "🔌 Adding Logging..."
-curl -i -X POST http://localhost:8001/plugins \
-  --data "name=file-log" \
-  --data "config.path=/tmp/kong.log"
+echo "   ✅ CORS plugin enabled"
 
+# Add Rate Limiting (optional)
+curl -s -X POST http://localhost:18001/plugins \
+  --data "name=rate-limiting" \
+  --data "config.minute=1000" \
+  --data "config.policy=local" > /dev/null
+
+echo "   ✅ Rate limiting enabled (1000 req/min)"
+
+echo ""
 echo "✅ Kong setup complete!"
 echo ""
-echo "📊 Access points:"
-echo "  - API Gateway:  http://localhost:8000"
-echo "  - Kong Admin:   http://localhost:8001"
-echo "  - Konga UI:     http://localhost:1337"
+echo "📊 Endpoints available:"
+echo "   http://localhost:8000/players"
+echo "   http://localhost:8000/monster"
+echo "   http://localhost:8000/battles"
+echo "   http://localhost:8000/rankings"
 echo ""
-echo "🔍 Test endpoints:"
-echo "  curl http://localhost:8000/api/players"
-echo "  curl http://localhost:8000/api/monster"
-echo "  curl http://localhost:8000/api/battles"
-echo "  curl http://localhost:8000/api/rankings"
-
-# ==================================
-# frontend/src/App.tsx (UPDATED for API Gateway)
-# ==================================
-// Change API endpoints to use Kong Gateway
-const API = {
-  GATEWAY: 'http://localhost:8000', // Kong Gateway
-  PLAYER: 'http://localhost:8000/api/players',
-  MONSTER: 'http://localhost:8000/api/monster',
-  BATTLE: 'http://localhost:8000/api/battles',
-  RANKING: 'http://localhost:8000/api/rankings'
-};
-
-// Or use direct access (bypass gateway)
-const API_DIRECT = {
-  PLAYER: 'http://localhost:8001',
-  MONSTER: 'http://localhost:8002',
-  BATTLE: 'http://localhost:8003',
-  RANKING: 'http://localhost:8004'
-};
+echo "🧪 Test with:"
+echo "   curl http://localhost:8000/players/health"
+echo "   curl http://localhost:8000/monster/health"
+echo ""

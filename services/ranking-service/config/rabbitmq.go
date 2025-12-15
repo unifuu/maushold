@@ -44,7 +44,7 @@ func InitRabbitMQ(cfg *Config) (*amqp.Connection, *amqp.Channel) {
 	}
 
 	// Declare our queue
-	_, err = ch.QueueDeclare("player.updates", true, false, false, false, nil)
+	_, err = ch.QueueDeclare("ranking.updates", true, false, false, false, nil)
 	if err != nil {
 		log.Fatal("Failed to declare queue:", err)
 	}

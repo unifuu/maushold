@@ -311,7 +311,7 @@ const HomeView: React.FC<{
     <div className="view">
       <div className="header">
         <h2 className="title">Welcome to Maushold</h2>
-        <p className="subtitle">Battle with Pokémon and climb the rankings!</p>
+        <p className="subtitle">Battle with Monster and climb the rankings!</p>
       </div>
 
       <div className="card">
@@ -385,10 +385,10 @@ const ProfileView: React.FC<{
 
       <div className="card">
         <div className="card-header">
-          <h3 className="card-title">Your Pokémon Team</h3>
+          <h3 className="card-title">Your Monster Team</h3>
           <div className="button-group">
             <button onClick={() => setShowAdd(!showAdd)} className="btn-primary">
-              Add Pokémon
+              Add Monster
             </button>
             {playerMonster.length >= 1 && (
               <button onClick={() => setView('battle')} className="btn-battle">
@@ -400,7 +400,7 @@ const ProfileView: React.FC<{
 
         {showAdd && (
           <div className="add-monster">
-            <h4 className="section-title">Available Pokémon</h4>
+            <h4 className="section-title">Available Monster</h4>
             <div className="monster-grid">
               {monster.map(p => (
                 <div
@@ -417,7 +417,7 @@ const ProfileView: React.FC<{
         )}
 
         {playerMonster.length === 0 ? (
-          <p className="empty-message">No Pokémon yet. Add some to your team!</p>
+          <p className="empty-message">No Monster yet. Add some to your team!</p>
         ) : (
           <div className="team-grid">
             {playerMonster.map(p => (
@@ -471,7 +471,7 @@ const BattleView: React.FC<{
 
       <div className="battle-grid">
         <div className="battle-side blue">
-          <h3 className="side-title">Your Pokémon</h3>
+          <h3 className="side-title">Your Monster</h3>
           <div className="selection-list">
             {playerMonster.map(p => (
               <div

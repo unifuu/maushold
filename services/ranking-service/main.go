@@ -36,13 +36,16 @@ func main() {
 	leaderboardService := service.NewLeaderboardService(redisClient)
 	rankingService := service.NewRankingService(rankingRepo, playerClient, leaderboardService)
 
+	// Initialize service discovery
+	serviceDiscovery := service.NewServiceDiscovery(consulClient)
+
 	messageConsumer := messaging.NewConsumer(rabbitCh, rankingService)
 	go messageConsumer.Start()
 
 	// Start periodic sync
 	go rankingService.StartPeriodicSync()
 
-	rankingHandler := handler.NewRankingHandler(rankingService)
+	rankingHandler := handler.NewRankingHandler(rankingService, serviceDiscovery)
 
 	router := mux.NewRouter()
 	routes.SetupRankingRoutes(router, rankingHandler)

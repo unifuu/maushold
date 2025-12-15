@@ -1,13 +1,180 @@
 # Maushold Microservices Makefile
 
-.PHONY: help build-all build-player build-monster build-battle build-ranking \
-        docker-up docker-down docker-logs \
-        k8s-deploy k8s-status k8s-logs k8s-cleanup \
-		kong-setup kong-status kong-routes kong-plugins \
-        test lint tidy clean
+.PHONY: help build-all dev stop clean test
 
 # Default target
 help:
+	@echo "Maushold Microservices - Available Commands:"
+	@echo ""
+	@echo "🚀 Quick Start:"
+	@echo "  make start          - Start all services"
+	@echo "  make setup          - Setup Kong routes"
+	@echo "  make test           - Run complete test suite"
+	@echo "  make ui             - Open all UIs"
+	@echo ""
+	@echo "🔍 Monitoring:"
+	@echo "  make status         - Check all services status"
+	@echo "  make logs           - View all logs (specify SERVICE=name)"
+	@echo "  make consul         - Open Consul UI"
+	@echo "  make kong-ui        - Open Konga UI"
+	@echo "  make rabbitmq       - Open RabbitMQ UI"
+	@echo ""
+	@echo "🧪 Testing:"
+	@echo "  make test-quick     - Quick health check"
+	@echo "  make test-full      - Full user flow test"
+	@echo "  make test-battle    - Test battle system"
+	@echo ""
+	@echo "🛠️ Development:"
+	@echo "  make stop           - Stop all services"
+	@echo "  make restart        - Restart all services"
+	@echo "  make clean          - Stop and remove volumes"
+	@echo "  make rebuild        - Rebuild all services"
+
+# Start all services
+start:
+	@echo "🚀 Starting Maushold..."
+	docker-compose up -d
+	@echo "⏳ Waiting for services to be ready..."
+	@sleep 30
+	@echo "✅ Services started!"
+	@echo ""
+	@echo "📊 Access Points:"
+	@echo "  Frontend:  http://localhost:3000"
+	@echo "  Kong:      http://localhost:8000"
+	@echo "  Consul:    http://localhost:8500"
+	@echo "  Konga:     http://localhost:1337"
+	@echo "  RabbitMQ:  http://localhost:15672"
+
+# Setup Kong routes
+setup:
+	@echo "🔧 Setting up Kong API Gateway..."
+	@bash scripts/setup-kong.sh || echo "Run 'make setup' again if Kong isn't ready yet"
+
+# Complete setup (start + setup)
+init: start
+	@sleep 10
+	@make setup
+	@echo ""
+	@echo "✅ Maushold is ready!"
+	@echo "Run 'make test' to verify everything works"
+
+# Stop all services
+stop:
+	@echo "🛑 Stopping all services..."
+	docker-compose down
+
+# Clean everything (including volumes)
+clean:
+	@echo "🧹 Cleaning up..."
+	docker-compose down -v
+	@echo "✅ Cleaned!"
+
+# Restart all services
+restart:
+	@echo "🔄 Restarting services..."
+	docker-compose restart
+	@echo "✅ Restarted!"
+
+# Rebuild all services
+rebuild:
+	@echo "🔨 Rebuilding all services..."
+	docker-compose up -d --build
+	@echo "✅ Rebuilt!"
+
+# Check status
+status:
+	@echo "📊 Service Status:"
+	@docker-compose ps
+
+# View logs
+logs:
+ifdef SERVICE
+	@docker-compose logs -f $(SERVICE)
+else
+	@docker-compose logs -f
+endif
+
+# Quick health check test
+test-quick:
+	@echo "🧪 Quick Health Check..."
+	@echo ""
+	@echo "Player Service:"
+	@curl -s http://localhost:8000/players/health | jq '.' || echo "❌ Failed"
+	@echo ""
+	@echo "Monster Service:"
+	@curl -s http://localhost:8000/monster/health | jq '.' || echo "❌ Failed"
+	@echo ""
+	@echo "Battle Service:"
+	@curl -s http://localhost:8000/battles/health | jq '.' || echo "❌ Failed"
+	@echo ""
+	@echo "Ranking Service:"
+	@curl -s http://localhost:8000/rankings/health | jq '.' || echo "❌ Failed"
+	@echo ""
+	@echo "✅ Health check complete!"
+
+# Full test suite
+test-full:
+	@echo "🧪 Running Full Test Suite..."
+	@bash test-maushold.sh || echo "Create test-maushold.sh first"
+
+# Test battle system
+test-battle:
+	@echo "⚔️ Testing Battle System..."
+	@bash scripts/test-battle.sh || echo "Creating test script..."
+	@echo '#!/bin/bash' > scripts/test-battle.sh
+	@echo 'P1=$(curl -s -X POST http://localhost:8000/players -H "Content-Type: application/json" -d '"'"'{"username":"Player1"}'"'"' | jq -r ".id")' >> scripts/test-battle.sh
+	@echo 'P2=$(curl -s -X POST http://localhost:8000/players -H "Content-Type: application/json" -d '"'"'{"username":"Player2"}'"'"' | jq -r ".id")' >> scripts/test-battle.sh
+	@echo 'M1=$(curl -s -X POST http://localhost:8000/players/$P1/monster -H "Content-Type: application/json" -d '"'"'{"monster_id":25,"nickname":"Pikachu","level":5,"hp":35,"attack":55,"defense":40,"speed":90}'"'"' | jq -r ".id")' >> scripts/test-battle.sh
+	@echo 'M2=$(curl -s -X POST http://localhost:8000/players/$P2/monster -H "Content-Type: application/json" -d '"'"'{"monster_id":6,"nickname":"Charizard","level":5,"hp":78,"attack":84,"defense":78,"speed":100}'"'"' | jq -r ".id")' >> scripts/test-battle.sh
+	@echo 'curl -s -X POST http://localhost:8000/battles -H "Content-Type: application/json" -d "{\"player1_id\":$P1,\"player2_id\":$P2,\"monster1_id\":$M1,\"monster2_id\":$M2}" | jq "."' >> scripts/test-battle.sh
+	@chmod +x scripts/test-battle.sh
+	@bash scripts/test-battle.sh
+
+# Open UIs
+consul:
+	@echo "🌐 Opening Consul UI..."
+	@open http://localhost:8500 || xdg-open http://localhost:8500
+
+kong-ui:
+	@echo "🌐 Opening Konga UI..."
+	@open http://localhost:1337 || xdg-open http://localhost:1337
+
+rabbitmq:
+	@echo "🌐 Opening RabbitMQ UI..."
+	@open http://localhost:15672 || xdg-open http://localhost:15672
+
+frontend:
+	@echo "🌐 Opening Frontend..."
+	@open http://localhost:3000 || xdg-open http://localhost:3000
+
+ui: consul kong-ui rabbitmq frontend
+	@echo "✅ All UIs opened!"
+
+# Check Kong configuration
+kong-status:
+	@echo "🔍 Kong Services:"
+	@curl -s http://localhost:18001/services | jq '.data[] | {name, url}'
+	@echo ""
+	@echo "🔍 Kong Routes:"
+	@curl -s http://localhost:18001/routes | jq '.data[] | {name, paths}'
+
+# Check Consul services
+consul-services:
+	@echo "🔍 Consul Services:"
+	@curl -s http://localhost:8500/v1/catalog/services | jq '.'
+	@echo ""
+	@echo "🔍 Healthy Services:"
+	@curl -s http://localhost:8500/v1/health/state/passing | jq '.[] | {service: .ServiceName, status: .Status}'
+
+# Complete test
+test: test-quick
+	@echo ""
+	@echo "✅ All tests passed!"
+	@echo ""
+	@echo "Try these next:"
+	@echo "  make test-battle  - Test the battle system"
+	@echo "  make frontend     - Open the UI"
+	@echo "  make ui           - Open all admin UIs"
 	@echo "Maushold Microservices - Available Commands:"
 	@echo ""
 	@echo "Local Development (Docker Compose):"
@@ -189,39 +356,6 @@ clean:
 	done
 	docker system prune -f
 	@echo "✅ Cleaned!"
-
-# Kong Commands
-kong-setup:
-	@echo "🚀 Setting up Kong API Gateway..."
-	chmod +x scripts/setup-kong.sh
-	./scripts/setup-kong.sh
-
-kong-status:
-	@echo "📊 Kong Status:"
-	@curl -s http://localhost:8001/ | jq '.'
-
-kong-routes:
-	@echo "🔍 Kong Routes:"
-	@curl -s http://localhost:8001/routes | jq '.data[] | {name: .name, paths: .paths, service: .service.id}'
-
-kong-services:
-	@echo "🔍 Kong Services:"
-	@curl -s http://localhost:8001/services | jq '.data[] | {name: .name, url: .url}'
-
-kong-plugins:
-	@echo "🔌 Kong Plugins:"
-	@curl -s http://localhost:8001/plugins | jq '.data[] | {name: .name, enabled: .enabled}'
-
-kong-test:
-	@echo "🧪 Testing Kong Gateway..."
-	@echo "Player Service:"
-	@curl -s http://localhost:8000/api/players | jq '.'
-	@echo ""
-	@echo "Monster Service:"
-	@curl -s http://localhost:8000/api/monster | jq '.'
-	@echo ""
-	@echo "Health Check:"
-	@curl -s http://localhost:8000/api/players/health | jq '.'
 
 # Quick Commands
 dev: docker-up

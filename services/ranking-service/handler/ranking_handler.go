@@ -11,12 +11,14 @@ import (
 )
 
 type RankingHandler struct {
-	rankingService service.RankingService
+	rankingService   service.RankingService
+	serviceDiscovery *service.ServiceDiscovery
 }
 
-func NewRankingHandler(rankingService service.RankingService) *RankingHandler {
+func NewRankingHandler(rankingService service.RankingService, serviceDiscovery *service.ServiceDiscovery) *RankingHandler {
 	return &RankingHandler{
-		rankingService: rankingService,
+		rankingService:   rankingService,
+		serviceDiscovery: serviceDiscovery,
 	}
 }
 

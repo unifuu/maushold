@@ -244,7 +244,7 @@ services:
       POSTGRES_USER: kong
       POSTGRES_PASSWORD: kongpass
     ports:
-      - "5436:5432"
+      - "15432:5432"
     volumes:
       - kong-db-data:/var/lib/postgresql/data
     healthcheck:
@@ -279,13 +279,11 @@ services:
       KONG_ADMIN_ERROR_LOG: /dev/stderr
       KONG_ADMIN_LISTEN: 0.0.0.0:8001
       KONG_PROXY_LISTEN: 0.0.0.0:8000
-      KONG_DNS_RESOLVER: consul:8600
-      KONG_DNS_ORDER: LAST,SRV,A,CNAME
     ports:
       - "8000:8000" # Proxy port (API Gateway entry point)
-      - "8001:8001" # Admin API port
+      - "18001:8001" # Admin API port
+      - "18002:8002" # Admin UI port
     depends_on:
-      consul:
       kong-database:
         condition: service_healthy
       kong-migrations:
@@ -296,20 +294,31 @@ services:
       timeout: 5s
       retries: 5
 
-  # Konga - Kong Admin UI
+  konga-db:
+    image: postgres:13-alpine
+    environment:
+      POSTGRES_DB: konga
+      POSTGRES_USER: kong
+      POSTGRES_PASSWORD: kongpass
+    volumes:
+      - konga-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U kong -d konga"]
+
+  # Konga
   konga:
     image: pantsel/konga:latest
     environment:
       NODE_ENV: development
       DB_ADAPTER: postgres
-      DB_HOST: kong-database
+      DB_HOST: konga-db
       DB_USER: kong
       DB_PASSWORD: kongpass
       DB_DATABASE: konga
     ports:
       - "1337:1337"
     depends_on:
-      kong-database:
+      konga-db:
         condition: service_healthy
 
 volumes:
@@ -321,3 +330,4 @@ volumes:
   redis-data:
   rabbitmq-data:
   kong-db-data:
+  konga-db-data:

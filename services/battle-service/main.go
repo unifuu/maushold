@@ -31,13 +31,16 @@ func main() {
 	}
 	defer config.DeregisterService(consulClient, "battle-service")
 
+	// Initialize service discovery
+	serviceDiscovery := service.NewServiceDiscovery(consulClient)
+
 	battleRepo := repository.NewBattleRepository(db)
 	playerClient := service.NewPlayerClient(cfg.PlayerServiceURL)
 	battleEngine := service.NewBattleEngine()
 	battleService := service.NewBattleService(battleRepo, playerClient, battleEngine, redisClient)
 
 	messageProducer := messaging.NewProducer(rabbitCh)
-	battleHandler := handler.NewBattleHandler(battleService, messageProducer)
+	battleHandler := handler.NewBattleHandler(battleService, messageProducer, serviceDiscovery)
 
 	router := mux.NewRouter()
 	routes.SetupBattleRoutes(router, battleHandler)

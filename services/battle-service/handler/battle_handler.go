@@ -12,14 +12,16 @@ import (
 )
 
 type BattleHandler struct {
-	battleService   service.BattleService
-	messageProducer *messaging.Producer
+	battleService    service.BattleService
+	messageProducer  *messaging.Producer
+	serviceDiscovery *service.ServiceDiscovery
 }
 
-func NewBattleHandler(battleService service.BattleService, messageProducer *messaging.Producer) *BattleHandler {
+func NewBattleHandler(battleService service.BattleService, messageProducer *messaging.Producer, serviceDiscovery *service.ServiceDiscovery) *BattleHandler {
 	return &BattleHandler{
-		battleService:   battleService,
-		messageProducer: messageProducer,
+		battleService:    battleService,
+		messageProducer:  messageProducer,
+		serviceDiscovery: serviceDiscovery,
 	}
 }
 
