@@ -3,6 +3,7 @@
 .PHONY: help build-all build-player build-monster build-battle build-ranking \
         docker-up docker-down docker-logs \
         k8s-deploy k8s-status k8s-logs k8s-cleanup \
+		kong-setup kong-status kong-routes kong-plugins \
         test lint tidy clean
 
 # Default target
@@ -188,6 +189,39 @@ clean:
 	done
 	docker system prune -f
 	@echo "✅ Cleaned!"
+
+# Kong Commands
+kong-setup:
+	@echo "🚀 Setting up Kong API Gateway..."
+	chmod +x scripts/setup-kong.sh
+	./scripts/setup-kong.sh
+
+kong-status:
+	@echo "📊 Kong Status:"
+	@curl -s http://localhost:8001/ | jq '.'
+
+kong-routes:
+	@echo "🔍 Kong Routes:"
+	@curl -s http://localhost:8001/routes | jq '.data[] | {name: .name, paths: .paths, service: .service.id}'
+
+kong-services:
+	@echo "🔍 Kong Services:"
+	@curl -s http://localhost:8001/services | jq '.data[] | {name: .name, url: .url}'
+
+kong-plugins:
+	@echo "🔌 Kong Plugins:"
+	@curl -s http://localhost:8001/plugins | jq '.data[] | {name: .name, enabled: .enabled}'
+
+kong-test:
+	@echo "🧪 Testing Kong Gateway..."
+	@echo "Player Service:"
+	@curl -s http://localhost:8000/api/players | jq '.'
+	@echo ""
+	@echo "Monster Service:"
+	@curl -s http://localhost:8000/api/monster | jq '.'
+	@echo ""
+	@echo "Health Check:"
+	@curl -s http://localhost:8000/api/players/health | jq '.'
 
 # Quick Commands
 dev: docker-up

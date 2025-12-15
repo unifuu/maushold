@@ -2,10 +2,11 @@ import React, { useState, useEffect } from 'react';
 import './App.css';
 
 const API = {
-  PLAYER: 'http://localhost:8001',
-  MONSTER: 'http://localhost:8002',
-  BATTLE: 'http://localhost:8003',
-  RANKING: 'http://localhost:8004'
+  GATEWAY: 'http://localhost:8000',
+  PLAYER: 'http://localhost:8000/api/players',
+  MONSTER: 'http://localhost:8000/api/monster',
+  BATTLE: 'http://localhost:8000/api/battles',
+  RANKING: 'http://localhost:8000/api/rankings'
 };
 
 interface Player {
@@ -86,16 +87,16 @@ const App: React.FC = () => {
     setDataLoading(true);
     try {
       console.log('Starting to load initial data...');
-      
+
       // Load players and monster (these services are running)
       const [playersRes, monsterRes] = await Promise.all([
         fetch(`${API.PLAYER}/players`),
         fetch(`${API.MONSTER}/monster`)
       ]);
-      
+
       console.log('Players response status:', playersRes.status);
       console.log('Monster response status:', monsterRes.status);
-      
+
       if (playersRes.ok) {
         const playersData = await playersRes.json();
         console.log('Loaded players:', playersData);
@@ -104,7 +105,7 @@ const App: React.FC = () => {
         console.error('Failed to load players:', playersRes.status, await playersRes.text());
         setPlayers([]);
       }
-      
+
       if (monsterRes.ok) {
         const monsterData = await monsterRes.json();
         console.log('Loaded monster:', monsterData);
@@ -143,20 +144,20 @@ const App: React.FC = () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username })
       });
-      
+
       if (!response.ok) {
         const errorText = await response.text();
         console.error('Error:', errorText);
         alert(`Failed to create player: ${errorText}`);
         return;
       }
-      
+
       const newPlayer: Player = await response.json();
       console.log('Player created:', newPlayer);
-      
+
       // Refresh the player list to make sure we have the latest data
       await loadInitialData();
-      
+
       setCurrentPlayer(newPlayer);
       setView('profile');
     } catch (error) {
@@ -171,10 +172,10 @@ const App: React.FC = () => {
         fetch(`${API.PLAYER}/players/${playerId}`),
         fetch(`${API.PLAYER}/players/${playerId}/monster`)
       ]);
-      
+
       const player: Player = await playerRes.json();
       const monster: PlayerMonster[] = await monsterRes.json();
-      
+
       setCurrentPlayer(player);
       setPlayerMonster(monster);
       setView('profile');
@@ -185,7 +186,7 @@ const App: React.FC = () => {
 
   const addMonsterToPlayer = async (monsterId: number) => {
     if (!currentPlayer) return;
-    
+
     const monsterData = monster.find(p => p.id === monsterId);
     if (!monsterData) return;
 
@@ -203,7 +204,7 @@ const App: React.FC = () => {
           speed: monsterData.base_speed
         })
       });
-      
+
       const newMonster: PlayerMonster = await response.json();
       setPlayerMonster([...playerMonster, newMonster]);
     } catch (error) {
@@ -213,7 +214,7 @@ const App: React.FC = () => {
 
   const startBattle = async (opponentId: number, myMonsterId: number, opponentMonsterId: number) => {
     if (!currentPlayer) return;
-    
+
     setLoading(true);
     try {
       const response = await fetch(`${API.BATTLE}/battles`, {
@@ -226,12 +227,12 @@ const App: React.FC = () => {
           monster2_id: opponentMonsterId
         })
       });
-      
+
       const battle: Battle = await response.json();
-      
+
       await loadInitialData();
       await selectPlayer(currentPlayer.id);
-      
+
       setRecentBattles([battle, ...recentBattles]);
       setView('battle-result');
     } catch (error) {
@@ -261,21 +262,21 @@ const App: React.FC = () => {
       <div className="container">
         {view === 'home' && <HomeView players={players} createPlayer={createPlayer} selectPlayer={selectPlayer} refreshData={loadInitialData} dataLoading={dataLoading} />}
         {view === 'profile' && currentPlayer && (
-          <ProfileView 
-            currentPlayer={currentPlayer} 
-            playerMonster={playerMonster} 
-            monster={monster} 
-            addMonsterToPlayer={addMonsterToPlayer} 
-            setView={setView} 
+          <ProfileView
+            currentPlayer={currentPlayer}
+            playerMonster={playerMonster}
+            monster={monster}
+            addMonsterToPlayer={addMonsterToPlayer}
+            setView={setView}
           />
         )}
         {view === 'battle' && currentPlayer && (
-          <BattleView 
-            currentPlayer={currentPlayer} 
-            playerMonster={playerMonster} 
-            players={players} 
-            startBattle={startBattle} 
-            loading={loading} 
+          <BattleView
+            currentPlayer={currentPlayer}
+            playerMonster={playerMonster}
+            players={players}
+            startBattle={startBattle}
+            loading={loading}
           />
         )}
         {view === 'leaderboard' && <LeaderboardView leaderboard={leaderboard} />}
@@ -330,10 +331,10 @@ const HomeView: React.FC<{
 
         {showCreate && (
           <div className="create-form">
-            <input 
-              type="text" 
-              placeholder="Enter username" 
-              value={username} 
+            <input
+              type="text"
+              placeholder="Enter username"
+              value={username}
               onChange={e => setUsername(e.target.value)}
               onKeyPress={e => e.key === 'Enter' && handleCreate()}
               className="input"
@@ -349,9 +350,9 @@ const HomeView: React.FC<{
             <p>No players found. Create the first player!</p>
           ) : (
             players.map(player => (
-              <div 
-                key={player.id} 
-                onClick={() => selectPlayer(player.id)} 
+              <div
+                key={player.id}
+                onClick={() => selectPlayer(player.id)}
                 className="player-card"
               >
                 <h4 className="player-name">{player.username}</h4>
@@ -402,9 +403,9 @@ const ProfileView: React.FC<{
             <h4 className="section-title">Available Pokémon</h4>
             <div className="monster-grid">
               {monster.map(p => (
-                <div 
-                  key={p.id} 
-                  onClick={() => { addMonsterToPlayer(p.id); setShowAdd(false); }} 
+                <div
+                  key={p.id}
+                  onClick={() => { addMonsterToPlayer(p.id); setShowAdd(false); }}
                   className="monster-card"
                 >
                   <p className="monster-name">{p.name}</p>
@@ -473,9 +474,9 @@ const BattleView: React.FC<{
           <h3 className="side-title">Your Pokémon</h3>
           <div className="selection-list">
             {playerMonster.map(p => (
-              <div 
-                key={p.id} 
-                onClick={() => setSelectedMyMonster(p.id)} 
+              <div
+                key={p.id}
+                onClick={() => setSelectedMyMonster(p.id)}
                 className={`selection-item ${selectedMyMonster === p.id ? 'selected' : ''}`}
               >
                 <p className="selection-name">{p.nickname}</p>
@@ -490,20 +491,20 @@ const BattleView: React.FC<{
           <div className="selection-list">
             {players.filter(p => p.id !== currentPlayer.id).map(p => (
               <div key={p.id}>
-                <div 
-                  onClick={() => selectOpponent(p.id)} 
+                <div
+                  onClick={() => selectOpponent(p.id)}
                   className={`selection-item ${selectedOpponent === p.id ? 'selected' : ''}`}
                 >
                   <p className="selection-name">{p.username}</p>
                   <p className="selection-stats">⭐ {p.points} points</p>
                 </div>
-                
+
                 {selectedOpponent === p.id && opponentMonster.length > 0 && (
                   <div className="sub-selection">
                     {opponentMonster.map(op => (
-                      <div 
-                        key={op.id} 
-                        onClick={() => setSelectedOpponentMonster(op.id)} 
+                      <div
+                        key={op.id}
+                        onClick={() => setSelectedOpponentMonster(op.id)}
                         className={`sub-item ${selectedOpponentMonster === op.id ? 'selected' : ''}`}
                       >
                         {op.nickname} (HP: {op.hp})
@@ -518,10 +519,10 @@ const BattleView: React.FC<{
       </div>
 
       <div className="battle-action">
-        <button 
-          onClick={() => selectedMyMonster && selectedOpponent && selectedOpponentMonster && 
-                        startBattle(selectedOpponent, selectedMyMonster, selectedOpponentMonster)} 
-          disabled={!canBattle || loading} 
+        <button
+          onClick={() => selectedMyMonster && selectedOpponent && selectedOpponentMonster &&
+            startBattle(selectedOpponent, selectedMyMonster, selectedOpponentMonster)}
+          disabled={!canBattle || loading}
           className={`btn-battle-start ${!canBattle || loading ? 'disabled' : ''}`}
         >
           {loading ? 'Battling...' : '⚔️ START BATTLE!'}
@@ -564,7 +565,7 @@ const LeaderboardView: React.FC<{ leaderboard: LeaderboardEntry[] }> = ({ leader
   return (
     <div className="view">
       <h2 className="page-title">🏆 Global Leaderboard</h2>
-      
+
       <div className="card">
         <table className="leaderboard-table">
           <thead>
