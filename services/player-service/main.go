@@ -40,6 +40,9 @@ func main() {
 	}
 	defer config.DeregisterService(consulClient, "player-service")
 
+	// Initialize service discovery
+	serviceDiscovery := service.NewServiceDiscovery(consulClient)
+
 	// Initialize repositories
 	playerRepo := repository.NewPlayerRepository(db)
 	playerMonsterRepo := repository.NewPlayerMonsterRepository(db)
@@ -56,7 +59,7 @@ func main() {
 	go messageConsumer.Start()
 
 	// Initialize handlers
-	playerHandler := handler.NewPlayerHandler(playerService, playerMonsterService, messageProducer)
+	playerHandler := handler.NewPlayerHandler(playerService, playerMonsterService, messageProducer, serviceDiscovery)
 
 	// Setup routes
 	router := mux.NewRouter()

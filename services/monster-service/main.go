@@ -31,6 +31,9 @@ func main() {
 	}
 	defer config.DeregisterService(consulClient, "monster-service")
 
+	// Initialize service discovery
+	serviceDiscovery := service.NewServiceDiscovery(consulClient)
+
 	monsterRepo := repository.NewMonsterRepository(db)
 	monsterService := service.NewMonsterService(monsterRepo, redisClient)
 
@@ -38,7 +41,7 @@ func main() {
 	service.SeedMonster(monsterRepo)
 
 	messageProducer := messaging.NewProducer(rabbitCh)
-	monsterHandler := handler.NewMonsterHandler(monsterService, messageProducer)
+	monsterHandler := handler.NewMonsterHandler(monsterService, messageProducer, serviceDiscovery)
 
 	router := mux.NewRouter()
 	routes.SetupMonsterRoutes(router, monsterHandler)

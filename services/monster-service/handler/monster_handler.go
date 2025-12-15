@@ -13,14 +13,16 @@ import (
 )
 
 type MonsterHandler struct {
-	monsterService  service.MonsterService
-	messageProducer *messaging.Producer
+	monsterService   service.MonsterService
+	messageProducer  *messaging.Producer
+	serviceDiscovery *service.ServiceDiscovery
 }
 
-func NewMonsterHandler(monsterService service.MonsterService, messageProducer *messaging.Producer) *MonsterHandler {
+func NewMonsterHandler(monsterService service.MonsterService, messageProducer *messaging.Producer, serviceDiscovery *service.ServiceDiscovery) *MonsterHandler {
 	return &MonsterHandler{
-		monsterService:  monsterService,
-		messageProducer: messageProducer,
+		monsterService:   monsterService,
+		messageProducer:  messageProducer,
+		serviceDiscovery: serviceDiscovery,
 	}
 }
 

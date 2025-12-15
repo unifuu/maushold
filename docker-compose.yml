@@ -1,22 +1,26 @@
 services:
-  # Consul - Service Discovery
+  api-gateway:
+    image: kong:latest
+    environment:
+      KONG_DATABASE: "off"
+      KONG_PROXY_LISTEN: "0.0.0.0:8000"
+      KONG_ADMIN_LISTEN: "0.0.0.0:8001"
+    ports:
+      - "8000:8000" # API Gateway port
+      - "8001:8001" # Admin API
+
+  # Consul
   consul:
     image: hashicorp/consul:1.19.2
     ports:
       - "8500:8500"
       - "8600:8600/udp"
     command: >
-      consul agent
-      -server
-      -ui
-      -bootstrap-expect=1
-      -client=0.0.0.0
-      -bind=0.0.0.0
-      -data-dir=/consul/data
+      consul agent -server -ui -bootstrap-expect=1 -client=0.0.0.0 -bind=0.0.0.0 -data-dir=/consul/data
     volumes:
       - consul-data:/consul/data
     healthcheck:
-      test: ["CMD", "consul", "info"]
+      test: [ "CMD", "consul", "info" ]
       interval: 5s
       timeout: 3s
       retries: 5
@@ -33,7 +37,7 @@ services:
     volumes:
       - player-db-data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      test: [ "CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}" ]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -49,7 +53,7 @@ services:
     volumes:
       - monster-db-data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      test: [ "CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}" ]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -65,7 +69,7 @@ services:
     volumes:
       - battle-db-data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      test: [ "CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}" ]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -81,7 +85,7 @@ services:
     volumes:
       - ranking-db-data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      test: [ "CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}" ]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -95,7 +99,7 @@ services:
       - redis-data:/data
     command: redis-server --requirepass ${REDIS_PASSWORD}
     healthcheck:
-      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      test: [ "CMD", "redis-cli", "--raw", "incr", "ping" ]
       interval: 5s
       timeout: 3s
       retries: 5
@@ -112,7 +116,7 @@ services:
     volumes:
       - rabbitmq-data:/var/lib/rabbitmq
     healthcheck:
-      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      test: [ "CMD", "rabbitmq-diagnostics", "ping" ]
       interval: 10s
       timeout: 5s
       retries: 5

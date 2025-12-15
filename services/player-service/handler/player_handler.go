@@ -16,17 +16,20 @@ type PlayerHandler struct {
 	playerService        service.PlayerService
 	playerMonsterService service.PlayerMonsterService
 	messageProducer      *messaging.Producer
+	serviceDiscovery     *service.ServiceDiscovery
 }
 
 func NewPlayerHandler(
 	playerService service.PlayerService,
 	playerMonsterService service.PlayerMonsterService,
 	messageProducer *messaging.Producer,
+	serviceDiscovery *service.ServiceDiscovery,
 ) *PlayerHandler {
 	return &PlayerHandler{
 		playerService:        playerService,
 		playerMonsterService: playerMonsterService,
 		messageProducer:      messageProducer,
+		serviceDiscovery:     serviceDiscovery,
 	}
 }
 
@@ -108,6 +111,33 @@ func (h *PlayerHandler) GetAllPlayers(w http.ResponseWriter, r *http.Request) {
 	}
 
 	respondJSON(w, http.StatusOK, players)
+}
+
+func (h *PlayerHandler) GetMonsterInfo(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	monsterID := vars["monsterId"]
+
+	monsterServiceURL, err := h.serviceDiscovery.DiscoverService("monster-service")
+	if err != nil {
+		respondError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	// Make request to discovered service
+	resp, err := http.Get(monsterServiceURL + "/monster/" + monsterID)
+	if err != nil {
+		respondError(w, http.StatusInternalServerError, "Failed to call monster service")
+		return
+	}
+	defer resp.Body.Close()
+
+	var monster interface{}
+	if err := json.NewDecoder(resp.Body).Decode(&monster); err != nil {
+		respondError(w, http.StatusInternalServerError, "Failed to parse monster data")
+		return
+	}
+
+	respondJSON(w, http.StatusOK, monster)
 }
 
 func (h *PlayerHandler) GetPlayerMonster(w http.ResponseWriter, r *http.Request) {
