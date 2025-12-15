@@ -27,22 +27,22 @@ create_service_and_route() {
   # Create route
   curl -s -X POST http://localhost:18001/services/$SERVICE_NAME/routes \
     --data "paths[]=$ROUTE_PATH" \
-    --data "strip_path=false" > /dev/null
+    --data "strip_path=true" > /dev/null
   
   echo "   ✅ $SERVICE_NAME created at $ROUTE_PATH"
 }
 
 # Create Player Service
-create_service_and_route "player-service" "http://player-service:8001" "/players"
+create_service_and_route "player-service" "http://player-service:8001" "/api/players"
 
 # Create Monster Service  
-create_service_and_route "monster-service" "http://monster-service:8002" "/monster"
+create_service_and_route "monster-service" "http://monster-service:8002" "/api/monster"
 
 # Create Battle Service
-create_service_and_route "battle-service" "http://battle-service:8003" "/battles"
+create_service_and_route "battle-service" "http://battle-service:8003" "/api/battles"
 
 # Create Ranking Service
-create_service_and_route "ranking-service" "http://ranking-service:8004" "/rankings"
+create_service_and_route "ranking-service" "http://ranking-service:8004" "/api/rankings"
 
 echo ""
 echo "🔌 Adding Plugins..."
@@ -50,11 +50,13 @@ echo "🔌 Adding Plugins..."
 # Add CORS Plugin
 curl -s -X POST http://localhost:18001/plugins \
   --data "name=cors" \
-  --data "config.origins=*" \
+  --data "config.origins=http://localhost:3000" \
   --data "config.methods=GET,POST,PUT,DELETE,OPTIONS,PATCH" \
-  --data "config.headers=Content-Type,Authorization" \
+  --data "config.headers=Accept,Accept-Version,Content-Length,Content-MD5,Content-Type,Date,Authorization,X-Requested-With" \
+  --data "config.exposed_headers=X-Auth-Token" \
   --data "config.credentials=true" \
-  --data "config.max_age=3600" > /dev/null
+  --data "config.max_age=3600" \
+  --data "config.preflight_continue=false" > /dev/null
 
 echo "   ✅ CORS plugin enabled"
 
@@ -70,12 +72,12 @@ echo ""
 echo "✅ Kong setup complete!"
 echo ""
 echo "📊 Endpoints available:"
-echo "   http://localhost:8000/players"
-echo "   http://localhost:8000/monster"
-echo "   http://localhost:8000/battles"
-echo "   http://localhost:8000/rankings"
+echo "   http://localhost:8000/api/players"
+echo "   http://localhost:8000/api/monster"
+echo "   http://localhost:8000/api/battles"
+echo "   http://localhost:8000/api/rankings"
 echo ""
 echo "🧪 Test with:"
-echo "   curl http://localhost:8000/players/health"
-echo "   curl http://localhost:8000/monster/health"
+echo "   curl http://localhost:8000/api/players/health"
+echo "   curl http://localhost:8000/api/monster/health"
 echo ""

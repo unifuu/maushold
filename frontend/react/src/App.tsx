@@ -90,8 +90,8 @@ const App: React.FC = () => {
 
       // Load players and monster (these services are running)
       const [playersRes, monsterRes] = await Promise.all([
-        fetch(`${API.PLAYER}/players`),
-        fetch(`${API.MONSTER}/monster`)
+        fetch(`${API.PLAYER}`),
+        fetch(`${API.MONSTER}`)
       ]);
 
       console.log('Players response status:', playersRes.status);
@@ -139,7 +139,7 @@ const App: React.FC = () => {
   const createPlayer = async (username: string) => {
     try {
       console.log('Creating player:', username);
-      const response = await fetch(`${API.PLAYER}/players`, {
+      const response = await fetch(`${API.PLAYER}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username })
@@ -169,8 +169,8 @@ const App: React.FC = () => {
   const selectPlayer = async (playerId: number) => {
     try {
       const [playerRes, monsterRes] = await Promise.all([
-        fetch(`${API.PLAYER}/players/${playerId}`),
-        fetch(`${API.PLAYER}/players/${playerId}/monster`)
+        fetch(`${API.PLAYER}/${playerId}`),
+        fetch(`${API.PLAYER}/${playerId}/monster`)
       ]);
 
       const player: Player = await playerRes.json();
@@ -191,7 +191,7 @@ const App: React.FC = () => {
     if (!monsterData) return;
 
     try {
-      const response = await fetch(`${API.PLAYER}/players/${currentPlayer.id}/monster`, {
+      const response = await fetch(`${API.PLAYER}/${currentPlayer.id}/monster`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -455,7 +455,7 @@ const BattleView: React.FC<{
   const selectOpponent = async (opponentId: number) => {
     setSelectedOpponent(opponentId);
     try {
-      const response = await fetch(`${API.PLAYER}/players/${opponentId}/monster`);
+      const response = await fetch(`${API.PLAYER}/${opponentId}/monster`);
       const monster: PlayerMonster[] = await response.json();
       setOpponentMonster(monster);
     } catch (error) {
