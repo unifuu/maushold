@@ -14,6 +14,7 @@ type PlayerMonster struct {
 	ID         uint      `gorm:"primaryKey" json:"id"`
 	PlayerID   uint      `gorm:"not null;index" json:"player_id"`
 	MonsterID  int       `gorm:"not null" json:"monster_id"`
+	Nickname   string    `gorm:"size:255" json:"nickname"`
 	Level      int       `gorm:"default:1" json:"level"`
 	Experience int       `gorm:"default:0" json:"experience"`
 	HP         int       `gorm:"not null" json:"hp"`
