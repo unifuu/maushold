@@ -52,11 +52,19 @@ setup:
 
 # Complete setup (start + setup)
 init: start
-	@sleep 10
+	@echo "⏳ Waiting for Kong to be ready..."
+	@bash scripts/wait-for-kong.sh
 	@make setup
 	@echo ""
 	@echo "✅ Maushold is ready!"
-	@echo "Run 'make test' to verify everything works"
+	@echo "🌐 Frontend: http://localhost:3000"
+	@echo "🔗 API Gateway: http://localhost:8000"
+	@echo ""
+	@echo "Run 'make test-quick' to verify everything works"
+
+# Quick development start (same as init)
+dev: init
+	@echo "🚀 Development environment is ready!"
 
 # Stop all services
 stop:
@@ -190,12 +198,12 @@ test: test-quick
 	@echo "  make build-battle       - Build battle service"
 	@echo "  make build-ranking      - Build ranking service"
 	@echo ""
-	@echo "Kubernetes:"
-	@echo "  make k8s-deploy         - Deploy to Kubernetes"
-	@echo "  make k8s-status         - Check deployment status"
-	@echo "  make k8s-logs           - View logs (specify SERVICE=name)"
-	@echo "  make k8s-port-forward   - Setup port forwarding"
-	@echo "  make k8s-cleanup        - Delete all resources"
+# 	@echo "Kubernetes:"
+# 	@echo "  make k8s-deploy         - Deploy to Kubernetes"
+# 	@echo "  make k8s-status         - Check deployment status"
+# 	@echo "  make k8s-logs           - View logs (specify SERVICE=name)"
+# 	@echo "  make k8s-port-forward   - Setup port forwarding"
+# 	@echo "  make k8s-cleanup        - Delete all resources"
 	@echo ""
 	@echo "Development:"
 	@echo "  make tidy               - Run go mod tidy on all services"
@@ -258,61 +266,61 @@ build-ranking:
 	@echo "🔨 Building ranking-service..."
 	cd services/ranking-service && docker build -t maushold/ranking-service:$(IMAGE_TAG) .
 
-# Kubernetes Commands
-k8s-deploy: build-all
-	@echo "🚀 Deploying to Kubernetes..."
-	kubectl apply -f k8s/namespace.yaml
-	kubectl apply -f k8s/configmap.yaml
-	kubectl apply -f k8s/secrets.yaml
-	@echo "⏳ Deploying infrastructure..."
-	kubectl apply -f k8s/consul.yaml
-	kubectl apply -f k8s/redis.yaml
-	kubectl apply -f k8s/rabbitmq.yaml
-	kubectl apply -f k8s/databases.yaml
-	@echo "⏳ Waiting for databases to be ready..."
-	sleep 30
-	@echo "⏳ Deploying services..."
-	kubectl apply -f k8s/player-service.yaml
-	kubectl apply -f k8s/monster-service.yaml
-	kubectl apply -f k8s/battle-service.yaml
-	kubectl apply -f k8s/ranking-service.yaml
-	@echo "✅ Deployment complete!"
-	@echo ""
-	@echo "Check status with: make k8s-status"
-	@echo "Access services at:"
-	@echo "   Player:  http://localhost:30001"
-	@echo "   Monster: http://localhost:30002"
-	@echo "   Battle:  http://localhost:30003"
-	@echo "   Ranking: http://localhost:30004"
+# # Kubernetes Commands
+# k8s-deploy: build-all
+# 	@echo "🚀 Deploying to Kubernetes..."
+# 	kubectl apply -f k8s/namespace.yaml
+# 	kubectl apply -f k8s/configmap.yaml
+# 	kubectl apply -f k8s/secrets.yaml
+# 	@echo "⏳ Deploying infrastructure..."
+# 	kubectl apply -f k8s/consul.yaml
+# 	kubectl apply -f k8s/redis.yaml
+# 	kubectl apply -f k8s/rabbitmq.yaml
+# 	kubectl apply -f k8s/databases.yaml
+# 	@echo "⏳ Waiting for databases to be ready..."
+# 	sleep 30
+# 	@echo "⏳ Deploying services..."
+# 	kubectl apply -f k8s/player-service.yaml
+# 	kubectl apply -f k8s/monster-service.yaml
+# 	kubectl apply -f k8s/battle-service.yaml
+# 	kubectl apply -f k8s/ranking-service.yaml
+# 	@echo "✅ Deployment complete!"
+# 	@echo ""
+# 	@echo "Check status with: make k8s-status"
+# 	@echo "Access services at:"
+# 	@echo "   Player:  http://localhost:30001"
+# 	@echo "   Monster: http://localhost:30002"
+# 	@echo "   Battle:  http://localhost:30003"
+# 	@echo "   Ranking: http://localhost:30004"
 
-k8s-status:
-	@echo "📊 Kubernetes Status:"
-	@echo ""
-	@echo "Pods:"
-	kubectl get pods -n $(NAMESPACE)
-	@echo ""
-	@echo "Services:"
-	kubectl get svc -n $(NAMESPACE)
-	@echo ""
-	@echo "Deployments:"
-	kubectl get deployments -n $(NAMESPACE)
+# k8s-status:
+# 	@echo "📊 Kubernetes Status:"
+# 	@echo ""
+# 	@echo "Pods:"
+# 	kubectl get pods -n $(NAMESPACE)
+# 	@echo ""
+# 	@echo "Services:"
+# 	kubectl get svc -n $(NAMESPACE)
+# 	@echo ""
+# 	@echo "Deployments:"
+# 	kubectl get deployments -n $(NAMESPACE)
 
-k8s-logs:
-ifdef SERVICE
-	kubectl logs -f deployment/$(SERVICE) -n $(NAMESPACE)
-else
-	@echo "Usage: make k8s-logs SERVICE=player-service"
-endif
+# k8s-logs:
+# ifdef SERVICE
+# 	kubectl logs -f deployment/$(SERVICE) -n $(NAMESPACE)
+# else
+# 	@echo "Usage: make k8s-logs SERVICE=player-service"
+# endif
 
-k8s-port-forward:
-	@echo "🔌 Setting up port forwarding..."
-	@echo "Consul UI will be available at http://localhost:8500"
-	kubectl port-forward -n $(NAMESPACE) svc/consul 8500:8500
+# k8s-port-forward:
+# 	@echo "🔌 Setting up port forwarding..."
+# 	@echo "Consul UI will be available at http://localhost:8500"
+# 	kubectl port-forward -n $(NAMESPACE) svc/consul 8500:8500
 
-k8s-cleanup:
-	@echo "🧹 Cleaning up Kubernetes resources..."
-	kubectl delete namespace $(NAMESPACE)
-	@echo "✅ Cleanup complete!"
+# k8s-cleanup:
+# 	@echo "🧹 Cleaning up Kubernetes resources..."
+# 	kubectl delete namespace $(NAMESPACE)
+# 	@echo "✅ Cleanup complete!"
 
 # Consul & Monitoring
 consul-ui:

@@ -6,9 +6,11 @@ import (
 	"maushold/player-service/handler"
 
 	"github.com/gorilla/mux"
+	"github.com/unifuu/lapras"
 )
 
 func SetupPlayerRoutes(router *mux.Router, handler *handler.PlayerHandler) {
+	router.Use(lapras.Cors)
 
 	// API routes
 	router.HandleFunc("/players", handler.CreatePlayer).Methods(http.MethodPost)

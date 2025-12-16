@@ -3,7 +3,7 @@
 # Kong Admin API URL
 KONG_ADMIN_URL="http://localhost:18001"
 
-echo "Setting up Kong API Gateway routes..."
+echo "Setting up Kong API Gateway routes (simple approach)..."
 
 # Wait for Kong to be ready
 bash scripts/wait-for-kong.sh
@@ -20,6 +20,11 @@ PLAYER_SERVICE_ID=$(curl -s -X POST $KONG_ADMIN_URL/services/ \
 echo "Creating Player Service route..."
 PLAYER_ROUTE_ID=$(curl -s -X POST $KONG_ADMIN_URL/services/player-service/routes \
   --data "paths[]=/api/players" \
+  --data "methods[]=GET" \
+  --data "methods[]=POST" \
+  --data "methods[]=PUT" \
+  --data "methods[]=DELETE" \
+  --data "methods[]=OPTIONS" \
   --data "strip_path=true" | jq -r '.id')
 
 # Add request transformer to rewrite path
@@ -38,6 +43,11 @@ MONSTER_SERVICE_ID=$(curl -s -X POST $KONG_ADMIN_URL/services/ \
 echo "Creating Monster Service route..."
 MONSTER_ROUTE_ID=$(curl -s -X POST $KONG_ADMIN_URL/services/monster-service/routes \
   --data "paths[]=/api/monster" \
+  --data "methods[]=GET" \
+  --data "methods[]=POST" \
+  --data "methods[]=PUT" \
+  --data "methods[]=DELETE" \
+  --data "methods[]=OPTIONS" \
   --data "strip_path=true" | jq -r '.id')
 
 # Add request transformer to rewrite path
@@ -45,42 +55,6 @@ echo "Adding request transformer for monsters..."
 curl -s -X POST $KONG_ADMIN_URL/routes/$MONSTER_ROUTE_ID/plugins \
   --data "name=request-transformer" \
   --data "config.replace.uri=/monster" > /dev/null
-
-# Create Battle Service
-echo "Creating Battle Service..."
-BATTLE_SERVICE_ID=$(curl -s -X POST $KONG_ADMIN_URL/services/ \
-  --data "name=battle-service" \
-  --data "url=http://battle-service:8003" | jq -r '.id')
-
-# Create Battle Service Route
-echo "Creating Battle Service route..."
-BATTLE_ROUTE_ID=$(curl -s -X POST $KONG_ADMIN_URL/services/battle-service/routes \
-  --data "paths[]=/api/battles" \
-  --data "strip_path=true" | jq -r '.id')
-
-# Add request transformer to rewrite path
-echo "Adding request transformer for battles..."
-curl -s -X POST $KONG_ADMIN_URL/routes/$BATTLE_ROUTE_ID/plugins \
-  --data "name=request-transformer" \
-  --data "config.replace.uri=/battles" > /dev/null
-
-# Create Ranking Service
-echo "Creating Ranking Service..."
-RANKING_SERVICE_ID=$(curl -s -X POST $KONG_ADMIN_URL/services/ \
-  --data "name=ranking-service" \
-  --data "url=http://ranking-service:8004" | jq -r '.id')
-
-# Create Ranking Service Route
-echo "Creating Ranking Service route..."
-RANKING_ROUTE_ID=$(curl -s -X POST $KONG_ADMIN_URL/services/ranking-service/routes \
-  --data "paths[]=/api/rankings" \
-  --data "strip_path=true" | jq -r '.id')
-
-# Add request transformer to rewrite path
-echo "Adding request transformer for rankings..."
-curl -s -X POST $KONG_ADMIN_URL/routes/$RANKING_ROUTE_ID/plugins \
-  --data "name=request-transformer" \
-  --data "config.replace.uri=/rankings" > /dev/null
 
 # Enable CORS plugin globally
 echo "Enabling CORS plugin..."
@@ -101,8 +75,6 @@ echo "Kong setup complete!"
 echo "You can now access your APIs through:"
 echo "  - Players: http://localhost:8000/api/players"
 echo "  - Monsters: http://localhost:8000/api/monster"
-echo "  - Battles: http://localhost:8000/api/battles"
-echo "  - Rankings: http://localhost:8000/api/rankings"
 
 echo ""
 echo "Testing the setup..."

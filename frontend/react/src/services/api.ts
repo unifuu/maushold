@@ -71,7 +71,7 @@ class ApiService {
     monster1Id: number,
     monster2Id: number
   ): Promise<Battle> {
-    const response = await fetch(`${BASE_URL}${ENDPOINTS.BATTLES}/battles`, {
+    const response = await fetch(`${BASE_URL}${ENDPOINTS.BATTLES}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -88,7 +88,7 @@ class ApiService {
   // Rankings
   async getLeaderboard(): Promise<LeaderboardEntry[]> {
     try {
-      const response = await fetch(`${BASE_URL}${ENDPOINTS.RANKINGS}/rankings`);
+      const response = await fetch(`${BASE_URL}${ENDPOINTS.RANKINGS}`);
       if (!response.ok) return [];
       return response.json();
     } catch {
