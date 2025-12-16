@@ -18,6 +18,16 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
 }) => {
   const [showAdd, setShowAdd] = useState(false);
 
+  // Helper function to get monster details
+  const getMonsterDetails = (playerMon: PlayerMonster) => {
+    const monsterData = monster.find(m => m.id === playerMon.monster_id);
+    return {
+      ...playerMon,
+      monsterName: monsterData?.name || 'Unknown',
+      monsterType: monsterData?.type1 || 'Unknown'
+    };
+  };
+
   return (
     <div className="view">
       <div className="profile-header">
@@ -44,17 +54,21 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
           <div className="add-monster">
             <h4 className="section-title">Available Monster</h4>
             <div className="monster-grid">
-              {monster.map(p => (
+              {monster.map(m => (
                 <div
-                  key={p.id}
+                  key={m.id}
                   onClick={() => {
-                    addMonsterToPlayer(p.id);
+                    addMonsterToPlayer(m.id);
                     setShowAdd(false);
                   }}
                   className="monster-card"
                 >
-                  <p className="monster-name">{p.name}</p>
-                  <p className="monster-type">{p.type1}</p>
+                  <p className="monster-name">{m.name}</p>
+                  <p className="monster-type">{m.type1}</p>
+                  <div style={{ fontSize: '0.75rem', marginTop: '4px', color: '#666' }}>
+                    <div>HP: {m.base_hp} | ATK: {m.base_attack}</div>
+                    <div>DEF: {m.base_defense} | SPD: {m.base_speed}</div>
+                  </div>
                 </div>
               ))}
             </div>
@@ -65,18 +79,24 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
           <p className="empty-message">No Monster yet. Add some to your team!</p>
         ) : (
           <div className="team-grid">
-            {playerMonster.map(p => (
-              <div key={p.id} className="team-card">
-                <h4 className="team-name">{p.nickname}</h4>
-                <div className="stats">
-                  <p>❤️ HP: {p.hp}</p>
-                  <p>⚔️ Attack: {p.attack}</p>
-                  <p>🛡️ Defense: {p.defense}</p>
-                  <p>⚡ Speed: {p.speed}</p>
-                  <p>📊 Level: {p.level}</p>
+            {playerMonster.map(pm => {
+              const details = getMonsterDetails(pm);
+              return (
+                <div key={pm.id} className="team-card">
+                  <h4 className="team-name">{details.nickname || details.monsterName}</h4>
+                  <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: '8px' }}>
+                    {details.monsterName} ({details.monsterType})
+                  </p>
+                  <div className="stats">
+                    <p>❤️ HP: {pm.hp || 0}</p>
+                    <p>⚔️ Attack: {pm.attack || 0}</p>
+                    <p>🛡️ Defense: {pm.defense || 0}</p>
+                    <p>⚡ Speed: {pm.speed || 0}</p>
+                    <p>📊 Level: {pm.level || 1}</p>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>

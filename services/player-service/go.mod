@@ -7,7 +7,6 @@ require (
 	github.com/gorilla/mux v1.8.1
 	github.com/hashicorp/consul/api v1.33.0
 	github.com/streadway/amqp v1.1.0
-	github.com/unifuu/lapras v0.0.0-20251215125809-16be4cfbef43
 	gorm.io/driver/postgres v1.6.0
 	gorm.io/gorm v1.31.1
 )
