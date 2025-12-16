@@ -225,16 +225,13 @@ services:
     ports:
       - "3000:3000"
     environment:
-      KONG_GATEWAY: http://localhost:8000
-      PLAYER_SERVICE: http://localhost:8000
-      MONSTER_SERVICE: http://localhost:8000
-      BATTLE_SERVICE: http://localhost:8000
-      RANKING_SERVICE: http://localhost:8000
+      REACT_APP_API_BASE_URL: http://localhost:8000
     depends_on:
       - player-service
       - monster-service
       - battle-service
       - ranking-service
+      - kong
 
   # Kong
   kong-database:
@@ -281,7 +278,7 @@ services:
       KONG_PROXY_LISTEN: 0.0.0.0:8000
       KONG_ADMIN_GUI_LISTEN: 0.0.0.0:8002
       KONG_ADMIN_GUI_URL: http://localhost:18002
-      KONG_ADMIN_GUI_API_URL: http://localhost:18001   
+      KONG_ADMIN_GUI_API_URL: http://localhost:18001
     ports:
       - "8000:8000"   # API Gateway entry point
       - "18001:8001"  # Admin API port
