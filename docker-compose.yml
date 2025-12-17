@@ -279,10 +279,11 @@ services:
       KONG_ADMIN_GUI_LISTEN: 0.0.0.0:8002
       KONG_ADMIN_GUI_URL: http://localhost:18002
       KONG_ADMIN_GUI_API_URL: http://localhost:18001
+      KONG_DNS_VALID_TTL: 1
     ports:
-      - "8000:8000"   # API Gateway entry point
-      - "18001:8001"  # Admin API port
-      - "18002:8002"  # Admin UI port
+      - "8000:8000" # API Gateway entry point
+      - "18001:8001" # Admin API port
+      - "18002:8002" # Admin UI port
     depends_on:
       kong-database:
         condition: service_healthy
