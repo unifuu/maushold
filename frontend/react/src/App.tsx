@@ -35,9 +35,9 @@ const App: React.FC = () => {
           <Route path="battle" element={<PlayerBattlePage />} />
         </Route>
 
-        {/* Default redirect to admin */}
-        <Route path="/" element={<Navigate to="/admin" replace />} />
-        <Route path="*" element={<Navigate to="/admin" replace />} />
+        {/* Default redirect to player login */}
+        <Route path="/" element={<Navigate to="/player/login" replace />} />
+        <Route path="*" element={<Navigate to="/player/login" replace />} />
       </Routes>
     </BrowserRouter>
   );

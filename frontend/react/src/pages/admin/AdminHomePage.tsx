@@ -15,7 +15,8 @@ export const AdminHomePage: React.FC = () => {
 
         setCreating(true);
         try {
-            const newPlayer = await apiService.createPlayer(username);
+            // Admin creates players with a default password
+            const newPlayer = await apiService.createPlayer(username, 'password123');
             await refreshData();
             setShowCreate(false);
             setUsername('');

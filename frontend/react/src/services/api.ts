@@ -17,11 +17,11 @@ class ApiService {
     return response.json();
   }
 
-  async createPlayer(username: string): Promise<Player> {
+  async createPlayer(username: string, password: string): Promise<Player> {
     const response = await fetch(`${BASE_URL}${ENDPOINTS.PLAYERS}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username })
+      body: JSON.stringify({ username, password })
     });
     if (!response.ok) {
       const errorText = await response.text();
@@ -37,6 +37,18 @@ class ApiService {
     if (!response.ok) {
       throw new Error('Failed to delete player');
     }
+  }
+
+  async login(username: string, password: string): Promise<Player> {
+    const response = await fetch(`${BASE_URL}${ENDPOINTS.PLAYERS}/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password })
+    });
+    if (!response.ok) {
+      throw new Error('Invalid username or password');
+    }
+    return response.json();
   }
 
   // Monsters

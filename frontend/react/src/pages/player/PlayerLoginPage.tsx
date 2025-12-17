@@ -15,30 +15,38 @@ export const PlayerLoginPage: React.FC = () => {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError('');
+
+        // Validate inputs
+        if (!username.trim()) {
+            setError('Username is required');
+            return;
+        }
+
+        if (!password.trim()) {
+            setError('Password is required');
+            return;
+        }
+
         setLoading(true);
 
         try {
             if (isLogin) {
-                // For now, just find player by username (you'll need proper authentication later)
-                const players = await apiService.getPlayers();
-                const player = players.find(p => p.username === username);
-
-                if (player) {
-                    setCurrentPlayer(player);
-                    localStorage.setItem('currentPlayer', JSON.stringify(player));
-                    navigate('/player/dashboard');
-                } else {
-                    setError('Player not found');
-                }
+                // Login: Use backend authentication
+                const player = await apiService.login(username, password);
+                setCurrentPlayer(player);
+                localStorage.setItem('currentPlayer', JSON.stringify(player));
+                navigate('/player/profile');
             } else {
-                // Register new player
-                const newPlayer = await apiService.createPlayer(username);
-                setCurrentPlayer(newPlayer);
-                localStorage.setItem('currentPlayer', JSON.stringify(newPlayer));
-                navigate('/player/dashboard');
+                // Register: Create new player with password
+                const newPlayer = await apiService.createPlayer(username, password);
+                // After registration, log them in
+                const loggedInPlayer = await apiService.login(username, password);
+                setCurrentPlayer(loggedInPlayer);
+                localStorage.setItem('currentPlayer', JSON.stringify(loggedInPlayer));
+                navigate('/player/profile');
             }
-        } catch (err) {
-            setError('An error occurred. Please try again.');
+        } catch (err: any) {
+            setError(err.message || 'An error occurred. Please try again.');
             console.error(err);
         } finally {
             setLoading(false);
@@ -65,23 +73,24 @@ export const PlayerLoginPage: React.FC = () => {
                                 className="input"
                                 required
                                 disabled={loading}
+                                autoComplete="username"
                             />
                         </div>
 
-                        {isLogin && (
-                            <div style={{ marginBottom: '16px' }}>
-                                <label style={{ display: 'block', marginBottom: '8px', fontWeight: 500 }}>
-                                    Password
-                                </label>
-                                <input
-                                    type="password"
-                                    value={password}
-                                    onChange={e => setPassword(e.target.value)}
-                                    className="input"
-                                    disabled={loading}
-                                />
-                            </div>
-                        )}
+                        <div style={{ marginBottom: '16px' }}>
+                            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 500 }}>
+                                Password
+                            </label>
+                            <input
+                                type="password"
+                                value={password}
+                                onChange={e => setPassword(e.target.value)}
+                                className="input"
+                                required
+                                disabled={loading}
+                                autoComplete={isLogin ? 'current-password' : 'new-password'}
+                            />
+                        </div>
 
                         {error && (
                             <div style={{
@@ -127,13 +136,15 @@ export const PlayerLoginPage: React.FC = () => {
                         fontSize: '0.875rem',
                         color: '#666'
                     }}>
-                        <p>Demo: Just enter any username to login</p>
+                        <p style={{ marginBottom: '8px' }}>
+                            <strong>Demo Mode:</strong> Create an account to get started
+                        </p>
                         <p style={{ marginTop: '8px' }}>
                             <a
                                 href="/admin"
                                 style={{ color: '#6366f1', textDecoration: 'none' }}
                             >
-                                Go to Admin Panel →
+                                Admin Panel →
                             </a>
                         </p>
                     </div>
