@@ -113,6 +113,24 @@ func (h *PlayerHandler) GetAllPlayers(w http.ResponseWriter, r *http.Request) {
 	respondJSON(w, http.StatusOK, players)
 }
 
+func (h *PlayerHandler) DeletePlayer(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id, err := strconv.ParseUint(vars["id"], 10, 32)
+	if err != nil {
+		respondError(w, http.StatusBadRequest, "Invalid player ID")
+		return
+	}
+
+	if err := h.playerService.DeletePlayer(uint(id)); err != nil {
+		respondError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	h.messageProducer.PublishPlayerEvent("player.deleted", map[string]interface{}{"id": id})
+
+	respondJSON(w, http.StatusOK, map[string]string{"message": "Player deleted successfully"})
+}
+
 func (h *PlayerHandler) GetMonsterInfo(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	monsterID := vars["monsterId"]

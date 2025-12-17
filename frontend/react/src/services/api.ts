@@ -30,6 +30,15 @@ class ApiService {
     return response.json();
   }
 
+  async deletePlayer(id: number): Promise<void> {
+    const response = await fetch(`${BASE_URL}${ENDPOINTS.PLAYERS}/${id}`, {
+      method: 'DELETE'
+    });
+    if (!response.ok) {
+      throw new Error('Failed to delete player');
+    }
+  }
+
   // Monsters
   async getMonsters(): Promise<Monster[]> {
     const response = await fetch(`${BASE_URL}${ENDPOINTS.MONSTERS}`);

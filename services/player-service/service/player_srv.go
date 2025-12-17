@@ -16,6 +16,7 @@ type PlayerService interface {
 	CreatePlayer(player *model.Player) error
 	GetPlayer(id uint) (*model.Player, error)
 	UpdatePlayer(player *model.Player) error
+	DeletePlayer(id uint) error
 	GetAllPlayers() ([]model.Player, error)
 	UpdatePlayerPoints(id uint, delta int) error
 }
@@ -79,6 +80,24 @@ func (s *playerService) UpdatePlayer(player *model.Player) error {
 
 func (s *playerService) GetAllPlayers() ([]model.Player, error) {
 	return s.repo.FindAll()
+}
+
+func (s *playerService) DeletePlayer(id uint) error {
+	player, err := s.GetPlayer(id)
+	if err != nil {
+		return err
+	}
+
+	err = s.repo.Delete(player)
+	if err != nil {
+		return err
+	}
+
+	// Invalidate cache
+	cacheKey := fmt.Sprintf("player:%d", id)
+	s.redis.Del(s.ctx, cacheKey)
+
+	return nil
 }
 
 func (s *playerService) UpdatePlayerPoints(id uint, delta int) error {

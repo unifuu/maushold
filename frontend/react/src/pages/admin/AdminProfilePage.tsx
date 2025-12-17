@@ -66,6 +66,25 @@ export const AdminProfilePage: React.FC = () => {
         };
     };
 
+    const handleDelete = async () => {
+        if (!player) return;
+
+        const confirmed = window.confirm(
+            `Are you sure you want to delete player "${player.username}"? This action cannot be undone and will delete all their monsters.`
+        );
+
+        if (!confirmed) return;
+
+        try {
+            await apiService.deletePlayer(player.id);
+            await refreshData();
+            navigate('/admin');
+        } catch (error) {
+            console.error('Error deleting player:', error);
+            alert('Failed to delete player. Please try again.');
+        }
+    };
+
     if (loading) return <div className="view"><p>Loading...</p></div>;
     if (!player) return <div className="view"><p>Player not found</p></div>;
 
@@ -76,9 +95,22 @@ export const AdminProfilePage: React.FC = () => {
             </button>
 
             <div className="profile-header">
-                <h2 className="profile-name">{player.username}</h2>
-                <p className="profile-points">⭐ {player.points} Points</p>
-                <p style={{ fontSize: '0.875rem', color: '#666' }}>Player ID: {player.id}</p>
+                <div>
+                    <h2 className="profile-name">{player.username}</h2>
+                    <p className="profile-points">⭐ {player.points} Points</p>
+                    <p style={{ fontSize: '0.875rem', color: '#666' }}>Player ID: {player.id}</p>
+                </div>
+                <button
+                    onClick={handleDelete}
+                    className="btn-secondary"
+                    style={{
+                        background: '#ef4444',
+                        alignSelf: 'flex-start',
+                        marginTop: '8px'
+                    }}
+                >
+                    🗑️ Delete Player
+                </button>
             </div>
 
             <div className="card">
