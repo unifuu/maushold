@@ -608,3 +608,21 @@ body {
     flex-direction: column;
   }
 }
+
+/* Active navigation button style */
+.nav-btn.active {
+  background: #3b82f6;
+  color: white;
+}
+
+/* Logo hover effect */
+.logo:hover {
+  transform: scale(1.05);
+  transition: transform 0.2s;
+}
+
+/* Clickable rows in leaderboard */
+.leaderboard-table tbody tr:hover {
+  background: #f3f4f6;
+  cursor: pointer;
+}

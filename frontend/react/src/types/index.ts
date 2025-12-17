@@ -54,4 +54,17 @@ export interface LeaderboardEntry {
   rank: number;
 }
 
+export interface AdminContextType {
+  players: Player[];
+  monsters: Monster[];
+  leaderboard: LeaderboardEntry[];
+  loading: boolean;
+  refreshData: () => Promise<void>;
+}
+
+export interface PlayerContextType {
+  currentPlayer: Player | null;
+  setCurrentPlayer: (player: Player | null) => void;
+}
+
 export type View = 'home' | 'profile' | 'battle' | 'battle-result' | 'leaderboard';
