@@ -12,6 +12,7 @@ type PlayerRepository interface {
 	Update(player *model.Player) error
 	FindAll() ([]model.Player, error)
 	UpdatePoints(id uint, points int) error
+	Delete(player *model.Player) error
 }
 
 type playerRepository struct {
@@ -44,4 +45,8 @@ func (r *playerRepository) FindAll() ([]model.Player, error) {
 
 func (r *playerRepository) UpdatePoints(id uint, points int) error {
 	return r.db.Model(&model.Player{}).Where("id = ?", id).Update("points", points).Error
+}
+
+func (r *playerRepository) Delete(player *model.Player) error {
+	return r.db.Delete(player).Error
 }

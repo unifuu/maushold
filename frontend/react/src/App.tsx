@@ -20,6 +20,28 @@ const App: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [dataLoading, setDataLoading] = useState(true);
 
+  // Prevent browser back button from leaving the app
+  useEffect(() => {
+    // Push initial state
+    window.history.pushState(null, '', window.location.href);
+
+    const handlePopState = (event: PopStateEvent) => {
+      // Push state again to prevent going back
+      window.history.pushState(null, '', window.location.href);
+
+      // Navigate within the app instead
+      if (view !== 'home') {
+        setView('home');
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, [view]);
+
   useEffect(() => {
     loadInitialData();
   }, []);
@@ -149,6 +171,7 @@ const App: React.FC = () => {
             players={players}
             startBattle={startBattle}
             loading={loading}
+            setView={setView}
           />
         )}
         {view === 'leaderboard' && <LeaderboardView leaderboard={leaderboard} />}

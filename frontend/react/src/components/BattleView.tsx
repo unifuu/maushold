@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { apiService } from '../services/api';
 import { API_CONFIG } from '../config/api.config';
-import type { Player, PlayerMonster } from '../types';
+import type { Player, PlayerMonster, View } from '../types';
 
 interface BattleViewProps {
   currentPlayer: Player;
@@ -9,6 +9,7 @@ interface BattleViewProps {
   players: Player[];
   startBattle: (opponentId: number, myMonsterId: number, opponentMonsterId: number) => void;
   loading: boolean;
+  setView: (view: View) => void;
 }
 
 export const BattleView: React.FC<BattleViewProps> = ({
@@ -16,7 +17,8 @@ export const BattleView: React.FC<BattleViewProps> = ({
   playerMonster,
   players,
   startBattle,
-  loading
+  loading,
+  setView
 }) => {
   const [selectedMyMonster, setSelectedMyMonster] = useState<number | null>(null);
   const [selectedOpponent, setSelectedOpponent] = useState<number | null>(null);
@@ -37,6 +39,14 @@ export const BattleView: React.FC<BattleViewProps> = ({
 
   return (
     <div className="view">
+      <button
+        onClick={() => setView('profile')}
+        className="btn-secondary"
+        style={{ marginBottom: '16px' }}
+      >
+        ← Back to Profile
+      </button>
+
       <h2 className="battle-title">⚔️ Battle Arena</h2>
 
       <div className="battle-grid">
