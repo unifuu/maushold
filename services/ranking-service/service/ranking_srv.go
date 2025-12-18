@@ -124,26 +124,38 @@ func (s *rankingService) UpdatePlayerCombatPower(playerID uint, combatPower int6
 
 // GetPlayerRanking returns a player's ranking information
 func (s *rankingService) GetPlayerRanking(playerID uint) (*model.PlayerRanking, error) {
+	// Try Redis cache first (fastest for detail lookup)
+	cachedPlayer, err := s.leaderboardService.GetPlayerDetails(playerID)
+	if err == nil && cachedPlayer != nil {
+		// Also try to get rank from Redis
+		rank, err := s.leaderboardService.GetPlayerRank(playerID)
+		if err == nil && rank > 0 {
+			cachedPlayer.Rank = int(rank)
+			return cachedPlayer, nil
+		}
+	}
+
+	// Fallback to DB
 	ranking, err := s.repo.FindByPlayerID(playerID)
 	if err != nil {
 		return nil, err
 	}
 
-	// Try to get rank from materialized view first (fast)
-	rank, err := s.repo.GetPlayerRankFromMaterializedView(playerID)
-	if err == nil && rank > 0 {
-		ranking.Rank = rank
-		return ranking, nil
-	}
-
-	// Fallback: try Redis
+	// Try to get rank from Redis
 	redisRank, err := s.leaderboardService.GetPlayerRank(playerID)
 	if err == nil && redisRank > 0 {
 		ranking.Rank = int(redisRank)
 		return ranking, nil
 	}
 
-	// Last resort: calculate from database (slow, only for players outside top 10K)
+	// Try to get rank from materialized view
+	rank, err := s.repo.GetPlayerRankFromMaterializedView(playerID)
+	if err == nil && rank > 0 {
+		ranking.Rank = rank
+		return ranking, nil
+	}
+
+	// Last resort: calculate from database
 	allRankings, _ := s.repo.FindAll()
 	rank = 1
 	for _, r := range allRankings {
@@ -158,17 +170,7 @@ func (s *rankingService) GetPlayerRanking(playerID uint) (*model.PlayerRanking, 
 
 // GetLeaderboard returns the top N players with metadata
 func (s *rankingService) GetLeaderboard(limit int) (*model.LeaderboardResponse, error) {
-	// Try materialized view first (fastest)
-	entries, err := s.repo.FindTopNFromMaterializedView(limit)
-	if err == nil && len(entries) > 0 {
-		metadata, _ := s.getMetadata(true)
-		return &model.LeaderboardResponse{
-			Leaderboard: entries,
-			Metadata:    *metadata,
-		}, nil
-	}
-
-	// Try Redis cache
+	// Try Redis cache first (highest performance for high traffic)
 	redisEntries, err := s.leaderboardService.GetTopPlayers(limit)
 	if err == nil && len(redisEntries) > 0 {
 		// Enrich with player details from cache
@@ -180,7 +182,17 @@ func (s *rankingService) GetLeaderboard(limit int) (*model.LeaderboardResponse, 
 		}, nil
 	}
 
-	// Fallback to database
+	// Fallback 1: Try materialized view (fast persistent storage)
+	entries, err := s.repo.FindTopNFromMaterializedView(limit)
+	if err == nil && len(entries) > 0 {
+		metadata, _ := s.getMetadata(true)
+		return &model.LeaderboardResponse{
+			Leaderboard: entries,
+			Metadata:    *metadata,
+		}, nil
+	}
+
+	// Fallback 2: Direct database query (consistent but slower)
 	rankings, err := s.repo.FindTopNByCombatPower(limit)
 	if err != nil {
 		return nil, err
