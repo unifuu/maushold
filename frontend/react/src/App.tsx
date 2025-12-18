@@ -13,6 +13,12 @@ import { PlayerProfilePage } from './pages/player/PlayerProfilePage';
 import { PlayerBattlePage } from './pages/player/PlayerBattlePage';
 import './App.css';
 
+// Component to handle authentication-aware redirects
+const AuthRedirect: React.FC = () => {
+  const currentPlayer = localStorage.getItem('currentPlayer');
+  return currentPlayer ? <Navigate to="/player/profile" replace /> : <Navigate to="/player/login" replace />;
+};
+
 const App: React.FC = () => {
   return (
     <BrowserRouter>
@@ -35,9 +41,9 @@ const App: React.FC = () => {
           <Route path="battle" element={<PlayerBattlePage />} />
         </Route>
 
-        {/* Default redirect to player login */}
-        <Route path="/" element={<Navigate to="/player/login" replace />} />
-        <Route path="*" element={<Navigate to="/player/login" replace />} />
+        {/* Default redirect - checks authentication state */}
+        <Route path="/" element={<AuthRedirect />} />
+        <Route path="*" element={<AuthRedirect />} />
       </Routes>
     </BrowserRouter>
   );

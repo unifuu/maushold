@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import type { Player } from '../types';
 
@@ -66,13 +66,6 @@ export const PlayerLayout: React.FC = () => {
                                 Login
                             </button>
                         )}
-                        <button
-                            onClick={() => navigate('/admin')}
-                            className="nav-btn"
-                            style={{ marginLeft: '20px', background: '#6366f1' }}
-                        >
-                            🛡️ Admin Panel
-                        </button>
                     </div>
                 </div>
             </nav>

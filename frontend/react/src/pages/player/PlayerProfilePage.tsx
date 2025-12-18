@@ -73,10 +73,6 @@ export const PlayerProfilePage: React.FC = () => {
 
     return (
         <div className="view">
-            <button onClick={() => navigate('/player/dashboard')} className="btn-secondary" style={{ marginBottom: '16px' }}>
-                ← Back to Dashboard
-            </button>
-
             <div className="profile-header">
                 <h2 className="profile-name">{currentPlayer.username}</h2>
                 <p className="profile-points">⭐ {currentPlayer.points} Points</p>

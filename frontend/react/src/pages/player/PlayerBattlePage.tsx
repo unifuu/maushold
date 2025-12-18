@@ -84,9 +84,6 @@ export const PlayerBattlePage: React.FC = () => {
     if (myMonsters.length === 0) {
         return (
             <div className="view">
-                <button onClick={() => navigate('/player/dashboard')} className="btn-secondary" style={{ marginBottom: '16px' }}>
-                    ← Back to Dashboard
-                </button>
                 <div className="card" style={{ background: '#fef3c7', borderLeft: '4px solid #f59e0b' }}>
                     <h3 style={{ color: '#92400e', marginBottom: '8px' }}>⚠️ No Monsters!</h3>
                     <p style={{ color: '#78350f', marginBottom: '12px' }}>
@@ -108,10 +105,6 @@ export const PlayerBattlePage: React.FC = () => {
 
     return (
         <div className="view">
-            <button onClick={() => navigate('/player/dashboard')} className="btn-secondary" style={{ marginBottom: '16px' }}>
-                ← Back to Dashboard
-            </button>
-
             <h2 className="battle-title">⚔️ Battle Arena</h2>
 
             <div className="battle-grid">
