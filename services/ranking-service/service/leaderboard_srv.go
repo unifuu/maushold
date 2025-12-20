@@ -227,6 +227,21 @@ func (s *LeaderboardService) GetPlayerDetails(playerID uint) (*model.PlayerRanki
 	}, nil
 }
 
+// RemovePlayer removes a player from the leaderboard and deletes their cached details
+func (s *LeaderboardService) RemovePlayer(playerID uint) error {
+	key := fmt.Sprintf("%s%d", PlayerDetailsPrefix, playerID)
+	pipe := s.redis.Pipeline()
+	pipe.ZRem(s.ctx, LeaderboardKey, fmt.Sprintf("%d", playerID))
+	pipe.Del(s.ctx, key)
+	_, err := pipe.Exec(s.ctx)
+
+	if err == nil {
+		s.updateThreshold()
+	}
+
+	return err
+}
+
 // BatchGetPlayerDetails retrieves multiple player details efficiently
 func (s *LeaderboardService) BatchGetPlayerDetails(playerIDs []uint) (map[uint]*model.PlayerRanking, error) {
 	if len(playerIDs) == 0 {

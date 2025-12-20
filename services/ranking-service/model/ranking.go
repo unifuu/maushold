@@ -7,7 +7,7 @@ type PlayerRanking struct {
 	PlayerID     uint      `gorm:"unique;not null;index:idx_player_id" json:"player_id"`
 	Username     string    `json:"username"`
 	CombatPower  int64     `gorm:"default:0;index:idx_combat_power,sort:desc" json:"combat_power"`
-	TotalPoints  int       `gorm:"default:1000" json:"total_points"`
+	TotalPoints  int       `gorm:"default:0" json:"total_points"`
 	TotalBattles int       `gorm:"default:0" json:"total_battles"`
 	Wins         int       `gorm:"default:0" json:"wins"`
 	Losses       int       `gorm:"default:0" json:"losses"`

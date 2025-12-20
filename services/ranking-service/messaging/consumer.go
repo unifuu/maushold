@@ -43,7 +43,33 @@ func (c *Consumer) Start() {
 		switch msg.RoutingKey {
 		case "battle.completed":
 			c.handleBattleCompleted(msg.Body)
+		case "player.deleted":
+			c.handlePlayerDeleted(msg.Body)
 		}
+	}
+}
+
+func (c *Consumer) handlePlayerDeleted(body []byte) {
+	var event map[string]interface{}
+	if err := json.Unmarshal(body, &event); err != nil {
+		log.Printf("Error parsing player deleted event: %v", err)
+		return
+	}
+
+	playerIDRaw, ok := event["player_id"]
+	if !ok {
+		log.Printf("Error: player_id missing in player.deleted event")
+		return
+	}
+
+	playerID := uint(playerIDRaw.(float64))
+	log.Printf("Processing player deletion: PlayerID=%d", playerID)
+
+	err := c.rankingService.DeletePlayerRanking(playerID)
+	if err != nil {
+		log.Printf("Error processing player deletion: %v", err)
+	} else {
+		log.Printf("Player %d ranking deleted successully", playerID)
 	}
 }
 

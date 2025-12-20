@@ -20,6 +20,8 @@ type RankingService interface {
 	StartPeriodicSync()
 	RefreshMaterializedView() error
 	SyncFromPlayerService() error
+	DeletePlayerRanking(playerID uint) error
+	SyncLeaderboardWithDB() error
 }
 
 type rankingService struct {
@@ -357,13 +359,19 @@ func (s *rankingService) SyncFromPlayerService() error {
 		}
 	}
 
+	// Reset all player stats before re-playing history to avoid accumulation
+	log.Println("Resetting all player statistics before history sync...")
+	if err := s.repo.ResetAllStats(); err != nil {
+		log.Printf("Warning: Failed to reset player stats: %v", err)
+	}
+
 	// Sync battle history for win/loss stats
 	battles, err := s.battleClient.GetAllBattles()
 	if err != nil {
 		log.Printf("Failed to fetch battles from battle-service: %v", err)
 		// Don't return, we still synced points
 	} else {
-		log.Printf("Syncing %d battles from history...", len(battles))
+		log.Printf("Found %d battles in history, re-calculating statistics...", len(battles))
 		for _, b := range battles {
 			if b.Status != "completed" {
 				continue
@@ -389,7 +397,50 @@ func (s *rankingService) SyncFromPlayerService() error {
 	}
 
 	log.Printf("Initial data sync completed. Processed %d players and %d battles.", len(players), len(battles))
+
+	// Clean up orphaned rankings (players no longer in player-service)
+	log.Println("Cleaning up orphaned rankings...")
+	allRankings, err := s.repo.FindAll()
+	if err == nil {
+		playerMap := make(map[uint]bool)
+		for _, p := range players {
+			playerMap[p.ID] = true
+		}
+
+		for _, r := range allRankings {
+			if !playerMap[r.PlayerID] {
+				log.Printf("Removing orphaned ranking for player %d (%s)", r.PlayerID, r.Username)
+				s.DeletePlayerRanking(r.PlayerID)
+			}
+		}
+	}
+
 	return nil
+}
+
+// DeletePlayerRanking deletes a player's ranking from DB and Redis
+func (s *rankingService) DeletePlayerRanking(playerID uint) error {
+	log.Printf("Deleting ranking for player %d", playerID)
+
+	// Delete from Redis
+	err := s.leaderboardService.RemovePlayer(playerID)
+	if err != nil {
+		log.Printf("Warning: Failed to remove player %d from Redis: %v", playerID, err)
+	}
+
+	// Delete from DB
+	err = s.repo.DeleteByPlayerID(playerID)
+	if err != nil {
+		log.Printf("Error deleting player %d from DB: %v", playerID, err)
+		return err
+	}
+
+	return nil
+}
+
+// SyncLeaderboardWithDB refreshes the Redis leaderboard with current DB state
+func (s *rankingService) SyncLeaderboardWithDB() error {
+	return s.SyncRankings()
 }
 
 // StartPeriodicSync starts periodic sync tasks

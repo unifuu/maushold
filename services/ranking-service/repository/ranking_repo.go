@@ -21,6 +21,10 @@ type RankingRepository interface {
 	RefreshMaterializedView() error
 	FindTopNFromMaterializedView(limit int) ([]model.LeaderboardEntry, error)
 	GetPlayerRankFromMaterializedView(playerID uint) (int, error)
+	ResetPlayerStats(playerID uint) error
+	ResetAllStats() error
+	FindByPlayerIDForUpdate(playerID uint) (*model.PlayerRanking, error)
+	DeleteByPlayerID(playerID uint) error
 }
 
 type rankingRepository struct {
@@ -125,4 +129,36 @@ func (r *rankingRepository) GetPlayerRankFromMaterializedView(playerID uint) (in
 		return 0, nil
 	}
 	return rank, err
+}
+
+func (r *rankingRepository) ResetPlayerStats(playerID uint) error {
+	return r.db.Model(&model.PlayerRanking{}).
+		Where("player_id = ?", playerID).
+		Updates(map[string]interface{}{
+			"wins":          0,
+			"losses":        0,
+			"total_battles": 0,
+			"win_rate":      0.0,
+		}).Error
+}
+
+func (r *rankingRepository) ResetAllStats() error {
+	return r.db.Model(&model.PlayerRanking{}).
+		Where("1 = 1").
+		Updates(map[string]interface{}{
+			"wins":          0,
+			"losses":        0,
+			"total_battles": 0,
+			"win_rate":      0.0,
+		}).Error
+}
+
+func (r *rankingRepository) FindByPlayerIDForUpdate(playerID uint) (*model.PlayerRanking, error) {
+	var ranking model.PlayerRanking
+	err := r.db.Set("gorm:query_option", "FOR UPDATE").Where("player_id = ?", playerID).First(&ranking).Error
+	return &ranking, err
+}
+
+func (r *rankingRepository) DeleteByPlayerID(playerID uint) error {
+	return r.db.Where("player_id = ?", playerID).Delete(&model.PlayerRanking{}).Error
 }

@@ -20,4 +20,6 @@ Tryna make a microservices demo.
 ``` bash
 make setup
 make dev
+make clear  # Clear all data
+make seed   # Generate seed data
 ```

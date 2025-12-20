@@ -36,7 +36,7 @@ const App: React.FC = () => {
 
         {/* Player Routes */}
         <Route path="/player" element={<PlayerLayout />}>
-          <Route index element={<Navigate to="/player/login" replace />} />
+          <Route index element={<AuthRedirect />} />
           <Route path="login" element={<PlayerLoginPage />} />
           <Route path="dashboard" element={<PlayerDashboardPage />} />
           <Route path="profile" element={<PlayerProfilePage />} />
