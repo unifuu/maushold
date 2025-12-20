@@ -16,6 +16,7 @@ RUN apk --no-cache add ca-certificates
 WORKDIR /root/
 
 COPY --from=builder /app/ranking-service .
+COPY --from=builder /app/migrations ./migrations
 
 EXPOSE 8004
 

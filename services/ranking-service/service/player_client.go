@@ -35,3 +35,22 @@ func (c *PlayerClient) GetPlayer(playerID uint) (*model.Player, error) {
 
 	return &player, nil
 }
+
+func (c *PlayerClient) GetAllPlayers() ([]model.Player, error) {
+	url := fmt.Sprintf("%s/players", c.baseURL)
+
+	resp, err := http.Get(url)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	body, _ := io.ReadAll(resp.Body)
+
+	var players []model.Player
+	if err := json.Unmarshal(body, &players); err != nil {
+		return nil, err
+	}
+
+	return players, nil
+}

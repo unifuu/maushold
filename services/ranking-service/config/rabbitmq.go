@@ -50,7 +50,7 @@ func InitRabbitMQ(cfg *Config) (*amqp.Connection, *amqp.Channel) {
 	}
 
 	// Bind queue to battle events (safe now that exchange exists)
-	err = ch.QueueBind("player.updates", "battle.completed", "battle.events", false, nil)
+	err = ch.QueueBind("ranking.updates", "battle.completed", "battle.events", false, nil)
 	if err != nil {
 		log.Printf("Warning: Failed to bind queue (will retry later): %v", err)
 		// Don't fail here - battle service might not be up yet

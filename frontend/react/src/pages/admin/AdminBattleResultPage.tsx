@@ -9,10 +9,13 @@ export const AdminBattleResultPage: React.FC = () => {
     const [battle, setBattle] = useState<Battle | null>(null);
 
     useEffect(() => {
-        // You'll need to add this method to your apiService
-        // For now, we'll use a placeholder
         if (battleId) {
-            // apiService.getBattle(parseInt(battleId)).then(setBattle);
+            apiService.getBattle(parseInt(battleId))
+                .then(setBattle)
+                .catch(err => {
+                    console.error('Error fetching battle:', err);
+                    alert('Failed to load battle results');
+                });
         }
     }, [battleId]);
 

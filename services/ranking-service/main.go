@@ -4,6 +4,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 
 	"maushold/ranking-service/config"
 	"maushold/ranking-service/handler"
@@ -44,6 +45,15 @@ func main() {
 
 	// Start periodic sync
 	go rankingService.StartPeriodicSync()
+
+	// Trigger initial sync from player-service to populate history
+	go func() {
+		log.Println("Waiting for player-service to be ready for sync...")
+		time.Sleep(10 * time.Second)
+		rankingService.SyncFromPlayerService()
+		rankingService.SyncRankings()
+		rankingService.RefreshMaterializedView()
+	}()
 
 	rankingHandler := handler.NewRankingHandler(rankingService, serviceDiscovery)
 

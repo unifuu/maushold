@@ -19,6 +19,7 @@ type RankingService interface {
 	SyncRankings() error
 	StartPeriodicSync()
 	RefreshMaterializedView() error
+	SyncFromPlayerService() error
 }
 
 type rankingService struct {
@@ -324,6 +325,36 @@ func (s *rankingService) RefreshMaterializedView() error {
 		return err
 	}
 	log.Printf("Materialized view refreshed successfully")
+	return nil
+}
+
+// SyncFromPlayerService pulls all players from player-service and populates rankings
+func (s *rankingService) SyncFromPlayerService() error {
+	log.Printf("Starting initial data sync from player-service...")
+	players, err := s.playerClient.GetAllPlayers()
+	if err != nil {
+		log.Printf("Failed to fetch players from player-service: %v", err)
+		return err
+	}
+
+	for _, p := range players {
+		ranking, err := s.repo.FindByPlayerID(p.ID)
+		if err == gorm.ErrRecordNotFound {
+			ranking = &model.PlayerRanking{
+				PlayerID:    p.ID,
+				Username:    p.Username,
+				TotalPoints: p.Points,
+				CombatPower: int64(p.Points) * 100,
+			}
+			s.repo.Create(ranking)
+		} else if err == nil {
+			ranking.TotalPoints = p.Points
+			ranking.CombatPower = int64(p.Points) * 100
+			s.repo.Update(ranking)
+		}
+	}
+
+	log.Printf("Initial data sync completed. Processed %d players.", len(players))
 	return nil
 }
 

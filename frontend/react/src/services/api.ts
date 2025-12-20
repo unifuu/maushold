@@ -106,12 +106,19 @@ class ApiService {
     return response.json();
   }
 
+  async getBattle(id: number): Promise<Battle> {
+    const response = await fetch(`${BASE_URL}${ENDPOINTS.BATTLES}/${id}`);
+    if (!response.ok) throw new Error('Failed to fetch battle result');
+    return response.json();
+  }
+
   // Rankings
   async getLeaderboard(): Promise<LeaderboardEntry[]> {
     try {
       const response = await fetch(`${BASE_URL}${ENDPOINTS.RANKINGS}`);
       if (!response.ok) return [];
-      return response.json();
+      const data = await response.json();
+      return data.leaderboard || [];
     } catch {
       return [];
     }

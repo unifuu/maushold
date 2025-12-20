@@ -8,10 +8,6 @@ export const AdminLeaderboardPage: React.FC = () => {
 
     return (
         <div className="view">
-            <button onClick={() => navigate('/admin')} className="btn-secondary" style={{ marginBottom: '16px' }}>
-                ← Back to Admin Home
-            </button>
-
             <h2 className="page-title">🏆 Global Leaderboard</h2>
 
             <div className="card">

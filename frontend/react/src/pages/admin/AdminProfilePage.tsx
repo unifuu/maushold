@@ -90,10 +90,6 @@ export const AdminProfilePage: React.FC = () => {
 
     return (
         <div className="view">
-            <button onClick={() => navigate('/admin')} className="btn-secondary" style={{ marginBottom: '16px' }}>
-                ← Back to Admin Home
-            </button>
-
             <div className="profile-header">
                 <div>
                     <h2 className="profile-name">{player.username}</h2>
