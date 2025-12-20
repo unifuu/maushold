@@ -6,6 +6,7 @@ import (
 	"strconv"
 
 	"maushold/battle-service/messaging"
+	"maushold/battle-service/model"
 	"maushold/battle-service/service"
 
 	"github.com/gorilla/mux"
@@ -103,9 +104,11 @@ func (h *BattleHandler) HealthCheck(w http.ResponseWriter, r *http.Request) {
 	respondJSON(w, http.StatusOK, map[string]string{"status": "healthy", "service": "battle-service"})
 }
 
-func getLoserID(battle interface{}) uint {
-	// Type assertion to get battle fields
-	return 0 // Implement based on your battle struct
+func getLoserID(battle *model.Battle) uint {
+	if battle.WinnerID == battle.Player1ID {
+		return battle.Player2ID
+	}
+	return battle.Player1ID
 }
 
 func respondJSON(w http.ResponseWriter, status int, data interface{}) {

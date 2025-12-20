@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 	"log"
+	"os"
 
 	"maushold/ranking-service/model"
 
@@ -23,6 +24,16 @@ func InitDB(cfg *Config) *gorm.DB {
 	err = db.AutoMigrate(&model.PlayerRanking{}, &model.LeaderboardEntry{}, &model.Player{})
 	if err != nil {
 		log.Fatal("Failed to migrate database:", err)
+	}
+
+	// Execute SQL migrations (Materialized View, etc.)
+	migrationPath := "migrations/001_add_combat_power_and_optimize.sql"
+	content, err := os.ReadFile(migrationPath)
+	if err == nil {
+		db.Exec(string(content))
+		log.Println("Applied SQL migrations")
+	} else {
+		log.Printf("Warning: Could not read migration file %s: %v", migrationPath, err)
 	}
 
 	log.Println("Database connected and migrated")

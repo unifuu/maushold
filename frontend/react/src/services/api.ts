@@ -17,15 +17,36 @@ class ApiService {
     return response.json();
   }
 
-  async createPlayer(username: string): Promise<Player> {
+  async createPlayer(username: string, password: string): Promise<Player> {
     const response = await fetch(`${BASE_URL}${ENDPOINTS.PLAYERS}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username })
+      body: JSON.stringify({ username, password })
     });
     if (!response.ok) {
       const errorText = await response.text();
       throw new Error(errorText);
+    }
+    return response.json();
+  }
+
+  async deletePlayer(id: number): Promise<void> {
+    const response = await fetch(`${BASE_URL}${ENDPOINTS.PLAYERS}/${id}`, {
+      method: 'DELETE'
+    });
+    if (!response.ok) {
+      throw new Error('Failed to delete player');
+    }
+  }
+
+  async login(username: string, password: string): Promise<Player> {
+    const response = await fetch(`${BASE_URL}${ENDPOINTS.PLAYERS}/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password })
+    });
+    if (!response.ok) {
+      throw new Error('Invalid username or password');
     }
     return response.json();
   }
@@ -85,12 +106,25 @@ class ApiService {
     return response.json();
   }
 
+  async getBattle(id: number): Promise<Battle> {
+    const response = await fetch(`${BASE_URL}${ENDPOINTS.BATTLES}/${id}`);
+    if (!response.ok) throw new Error('Failed to fetch battle result');
+    return response.json();
+  }
+
+  async getBattles(): Promise<Battle[]> {
+    const response = await fetch(`${BASE_URL}${ENDPOINTS.BATTLES}`);
+    if (!response.ok) throw new Error('Failed to fetch battle history');
+    return response.json();
+  }
+
   // Rankings
   async getLeaderboard(): Promise<LeaderboardEntry[]> {
     try {
       const response = await fetch(`${BASE_URL}${ENDPOINTS.RANKINGS}`);
       if (!response.ok) return [];
-      return response.json();
+      const data = await response.json();
+      return data.leaderboard || [];
     } catch {
       return [];
     }

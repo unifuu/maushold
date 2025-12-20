@@ -1,166 +1,53 @@
-import React, { useState, useEffect } from 'react';
-import { Navbar } from './components/Navbar';
-import { HomeView } from './components/HomeView';
-import { ProfileView } from './components/ProfileView';
-import { BattleView } from './components/BattleView';
-import { BattleResultView } from './components/BattleResultView';
-import { LeaderboardView } from './components/LeaderboardView';
-import { apiService } from './services/api';
-import type { Player, Monster, PlayerMonster, Battle, LeaderboardEntry, View } from './types';
+import React from 'react';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { AdminLayout } from './layouts/AdminLayout';
+import { PlayerLayout } from './layouts/PlayerLayout';
+import { AdminHomePage } from './pages/admin/AdminHomePage';
+import { AdminProfilePage } from './pages/admin/AdminProfilePage';
+import { AdminBattlePage } from './pages/admin/AdminBattlePage';
+import { AdminBattleResultPage } from './pages/admin/AdminBattleResultPage';
+import { AdminLeaderboardPage } from './pages/admin/AdminLeaderboardPage';
+import { AdminBattleHistoryPage } from './pages/admin/AdminBattleHistoryPage';
+import { PlayerLoginPage } from './pages/player/PlayerLoginPage';
+import { PlayerDashboardPage } from './pages/player/PlayerDashboardPage';
+import { PlayerProfilePage } from './pages/player/PlayerProfilePage';
+import { PlayerBattlePage } from './pages/player/PlayerBattlePage';
 import './App.css';
 
+// Component to handle authentication-aware redirects
+const AuthRedirect: React.FC = () => {
+  const currentPlayer = localStorage.getItem('currentPlayer');
+  return currentPlayer ? <Navigate to="/player/profile" replace /> : <Navigate to="/player/login" replace />;
+};
+
 const App: React.FC = () => {
-  const [view, setView] = useState<View>('home');
-  const [currentPlayer, setCurrentPlayer] = useState<Player | null>(null);
-  const [players, setPlayers] = useState<Player[]>([]);
-  const [monster, setMonster] = useState<Monster[]>([]);
-  const [playerMonster, setPlayerMonster] = useState<PlayerMonster[]>([]);
-  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
-  const [recentBattles, setRecentBattles] = useState<Battle[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [dataLoading, setDataLoading] = useState(true);
-
-  useEffect(() => {
-    loadInitialData();
-  }, []);
-
-  const loadInitialData = async () => {
-    setDataLoading(true);
-    try {
-      const [playersData, monsterData] = await Promise.all([
-        apiService.getPlayers(),
-        apiService.getMonsters()
-      ]);
-
-      setPlayers(playersData);
-      setMonster(monsterData);
-
-      const leaderboardData = await apiService.getLeaderboard();
-      setLeaderboard(leaderboardData);
-    } catch (error) {
-      console.error('Error loading data:', error);
-    } finally {
-      setDataLoading(false);
-    }
-  };
-
-  const createPlayer = async (username: string) => {
-    try {
-      const newPlayer = await apiService.createPlayer(username);
-      await loadInitialData();
-      setCurrentPlayer(newPlayer);
-      setView('profile');
-    } catch (error) {
-      console.error('Error creating player:', error);
-      alert(`Error: ${error}`);
-    }
-  };
-
-  const selectPlayer = async (playerId: number) => {
-    try {
-      const [player, monsters] = await Promise.all([
-        apiService.getPlayer(playerId),
-        apiService.getPlayerMonsters(playerId)
-      ]);
-      setCurrentPlayer(player);
-      setPlayerMonster(monsters);
-      setView('profile');
-    } catch (error) {
-      console.error('Error selecting player:', error);
-    }
-  };
-
-  const addMonsterToPlayer = async (monsterId: number) => {
-    if (!currentPlayer) return;
-
-    const monsterData = monster.find(p => p.id === monsterId);
-    if (!monsterData) return;
-
-    try {
-      const newMonster = await apiService.addMonsterToPlayer(currentPlayer.id, {
-        monster_id: monsterId,
-        nickname: monsterData.name,
-        level: 1,
-        hp: monsterData.base_hp,
-        attack: monsterData.base_attack,
-        defense: monsterData.base_defense,
-        speed: monsterData.base_speed
-      });
-      setPlayerMonster([...playerMonster, newMonster]);
-    } catch (error) {
-      console.error('Error adding Monster:', error);
-    }
-  };
-
-  const startBattle = async (
-    opponentId: number,
-    myMonsterId: number,
-    opponentMonsterId: number
-  ) => {
-    if (!currentPlayer) return;
-
-    setLoading(true);
-    try {
-      const battle = await apiService.createBattle(
-        currentPlayer.id,
-        opponentId,
-        myMonsterId,
-        opponentMonsterId
-      );
-
-      await loadInitialData();
-      await selectPlayer(currentPlayer.id);
-
-      setRecentBattles([battle, ...recentBattles]);
-      setView('battle-result');
-    } catch (error) {
-      console.error('Error starting battle:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   return (
-    <div className="app">
-      <Navbar currentPlayer={currentPlayer} setView={setView} />
-      <div className="container">
-        {view === 'home' && (
-          <HomeView
-            players={players}
-            createPlayer={createPlayer}
-            selectPlayer={selectPlayer}
-            refreshData={loadInitialData}
-            dataLoading={dataLoading}
-          />
-        )}
-        {view === 'profile' && currentPlayer && (
-          <ProfileView
-            currentPlayer={currentPlayer}
-            playerMonster={playerMonster}
-            monster={monster}
-            addMonsterToPlayer={addMonsterToPlayer}
-            setView={setView}
-          />
-        )}
-        {view === 'battle' && currentPlayer && (
-          <BattleView
-            currentPlayer={currentPlayer}
-            playerMonster={playerMonster}
-            players={players}
-            startBattle={startBattle}
-            loading={loading}
-          />
-        )}
-        {view === 'leaderboard' && <LeaderboardView leaderboard={leaderboard} />}
-        {view === 'battle-result' && recentBattles.length > 0 && currentPlayer && (
-          <BattleResultView
-            battle={recentBattles[0]}
-            currentPlayer={currentPlayer}
-            setView={setView}
-          />
-        )}
-      </div>
-    </div>
+    <BrowserRouter>
+      <Routes>
+        {/* Admin Routes */}
+        <Route path="/admin" element={<AdminLayout />}>
+          <Route index element={<AdminHomePage />} />
+          <Route path="profile/:playerId" element={<AdminProfilePage />} />
+          <Route path="battle/:playerId" element={<AdminBattlePage />} />
+          <Route path="battle-result/:battleId" element={<AdminBattleResultPage />} />
+          <Route path="leaderboard" element={<AdminLeaderboardPage />} />
+          <Route path="history" element={<AdminBattleHistoryPage />} />
+        </Route>
+
+        {/* Player Routes */}
+        <Route path="/player" element={<PlayerLayout />}>
+          <Route index element={<AuthRedirect />} />
+          <Route path="login" element={<PlayerLoginPage />} />
+          <Route path="dashboard" element={<PlayerDashboardPage />} />
+          <Route path="profile" element={<PlayerProfilePage />} />
+          <Route path="battle" element={<PlayerBattlePage />} />
+        </Route>
+
+        {/* Default redirect - checks authentication state */}
+        <Route path="/" element={<AuthRedirect />} />
+        <Route path="*" element={<AuthRedirect />} />
+      </Routes>
+    </BrowserRouter>
   );
 };
 

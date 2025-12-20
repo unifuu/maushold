@@ -34,10 +34,25 @@ func NewPlayerHandler(
 }
 
 func (h *PlayerHandler) CreatePlayer(w http.ResponseWriter, r *http.Request) {
-	var player model.Player
-	if err := json.NewDecoder(r.Body).Decode(&player); err != nil {
+	var req struct {
+		Username string `json:"username"`
+		Password string `json:"password"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		respondError(w, http.StatusBadRequest, "Invalid request payload")
 		return
+	}
+
+	// Validate inputs
+	if req.Username == "" || req.Password == "" {
+		respondError(w, http.StatusBadRequest, "Username and password are required")
+		return
+	}
+
+	player := model.Player{
+		Username: req.Username,
+		Password: req.Password, // Will be hashed in service layer
 	}
 
 	if err := h.playerService.CreatePlayer(&player); err != nil {
@@ -111,6 +126,50 @@ func (h *PlayerHandler) GetAllPlayers(w http.ResponseWriter, r *http.Request) {
 	}
 
 	respondJSON(w, http.StatusOK, players)
+}
+
+func (h *PlayerHandler) DeletePlayer(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id, err := strconv.ParseUint(vars["id"], 10, 32)
+	if err != nil {
+		respondError(w, http.StatusBadRequest, "Invalid player ID")
+		return
+	}
+
+	if err := h.playerService.DeletePlayer(uint(id)); err != nil {
+		respondError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	h.messageProducer.PublishPlayerEvent("player.deleted", map[string]interface{}{"id": id})
+
+	respondJSON(w, http.StatusOK, map[string]string{"message": "Player deleted successfully"})
+}
+
+func (h *PlayerHandler) Login(w http.ResponseWriter, r *http.Request) {
+	var req struct {
+		Username string `json:"username"`
+		Password string `json:"password"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		respondError(w, http.StatusBadRequest, "Invalid request payload")
+		return
+	}
+
+	// Validate inputs
+	if req.Username == "" || req.Password == "" {
+		respondError(w, http.StatusBadRequest, "Username and password are required")
+		return
+	}
+
+	player, err := h.playerService.AuthenticatePlayer(req.Username, req.Password)
+	if err != nil {
+		respondError(w, http.StatusUnauthorized, "Invalid username or password")
+		return
+	}
+
+	respondJSON(w, http.StatusOK, player)
 }
 
 func (h *PlayerHandler) GetMonsterInfo(w http.ResponseWriter, r *http.Request) {
