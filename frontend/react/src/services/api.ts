@@ -112,6 +112,12 @@ class ApiService {
     return response.json();
   }
 
+  async getBattles(): Promise<Battle[]> {
+    const response = await fetch(`${BASE_URL}${ENDPOINTS.BATTLES}`);
+    if (!response.ok) throw new Error('Failed to fetch battle history');
+    return response.json();
+  }
+
   // Rankings
   async getLeaderboard(): Promise<LeaderboardEntry[]> {
     try {

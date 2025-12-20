@@ -60,6 +60,12 @@ export const AdminLayout: React.FC = () => {
                             Leaderboard
                         </button>
                         <button
+                            onClick={() => navigate('/admin/history')}
+                            className={`nav-btn ${isActive('/admin/history') ? 'active' : ''}`}
+                        >
+                            Battle History
+                        </button>
+                        <button
                             onClick={() => navigate('/player/login')}
                             className="nav-btn"
                             style={{ marginLeft: '20px', background: '#10b981' }}

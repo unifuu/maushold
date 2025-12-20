@@ -7,6 +7,7 @@ import { AdminProfilePage } from './pages/admin/AdminProfilePage';
 import { AdminBattlePage } from './pages/admin/AdminBattlePage';
 import { AdminBattleResultPage } from './pages/admin/AdminBattleResultPage';
 import { AdminLeaderboardPage } from './pages/admin/AdminLeaderboardPage';
+import { AdminBattleHistoryPage } from './pages/admin/AdminBattleHistoryPage';
 import { PlayerLoginPage } from './pages/player/PlayerLoginPage';
 import { PlayerDashboardPage } from './pages/player/PlayerDashboardPage';
 import { PlayerProfilePage } from './pages/player/PlayerProfilePage';
@@ -30,6 +31,7 @@ const App: React.FC = () => {
           <Route path="battle/:playerId" element={<AdminBattlePage />} />
           <Route path="battle-result/:battleId" element={<AdminBattleResultPage />} />
           <Route path="leaderboard" element={<AdminLeaderboardPage />} />
+          <Route path="history" element={<AdminBattleHistoryPage />} />
         </Route>
 
         {/* Player Routes */}

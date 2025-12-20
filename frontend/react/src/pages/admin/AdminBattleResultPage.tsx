@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useOutletContext } from 'react-router-dom';
 import { apiService } from '../../services/api';
-import type { Battle } from '../../types';
+import type { Battle, AdminContextType } from '../../types';
 
 export const AdminBattleResultPage: React.FC = () => {
     const { battleId } = useParams<{ battleId: string }>();
     const navigate = useNavigate();
+    const { players } = useOutletContext<AdminContextType>();
     const [battle, setBattle] = useState<Battle | null>(null);
 
     useEffect(() => {
@@ -25,7 +26,9 @@ export const AdminBattleResultPage: React.FC = () => {
         <div className="view">
             <div className="result-header win">
                 <h2 className="result-title">🎉 Battle Complete!</h2>
-                <p className="result-points">Winner: Player {battle.winner_id}</p>
+                <p className="result-points">
+                    Winner: {players.find(p => p.id === battle.winner_id)?.username || `Player ${battle.winner_id}`}
+                </p>
             </div>
 
             <div className="card">
