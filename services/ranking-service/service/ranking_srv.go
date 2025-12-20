@@ -25,17 +25,20 @@ type RankingService interface {
 type rankingService struct {
 	repo               repository.RankingRepository
 	playerClient       *PlayerClient
+	battleClient       *BattleClient
 	leaderboardService *LeaderboardService
 }
 
 func NewRankingService(
 	repo repository.RankingRepository,
 	playerClient *PlayerClient,
+	battleClient *BattleClient,
 	leaderboardService *LeaderboardService,
 ) RankingService {
 	return &rankingService{
 		repo:               repo,
 		playerClient:       playerClient,
+		battleClient:       battleClient,
 		leaderboardService: leaderboardService,
 	}
 }
@@ -330,7 +333,7 @@ func (s *rankingService) RefreshMaterializedView() error {
 
 // SyncFromPlayerService pulls all players from player-service and populates rankings
 func (s *rankingService) SyncFromPlayerService() error {
-	log.Printf("Starting initial data sync from player-service...")
+	log.Printf("Starting initial data sync from player-service and battle-service...")
 	players, err := s.playerClient.GetAllPlayers()
 	if err != nil {
 		log.Printf("Failed to fetch players from player-service: %v", err)
@@ -354,7 +357,38 @@ func (s *rankingService) SyncFromPlayerService() error {
 		}
 	}
 
-	log.Printf("Initial data sync completed. Processed %d players.", len(players))
+	// Sync battle history for win/loss stats
+	battles, err := s.battleClient.GetAllBattles()
+	if err != nil {
+		log.Printf("Failed to fetch battles from battle-service: %v", err)
+		// Don't return, we still synced points
+	} else {
+		log.Printf("Syncing %d battles from history...", len(battles))
+		for _, b := range battles {
+			if b.Status != "completed" {
+				continue
+			}
+
+			// Update winner
+			if b.WinnerID != 0 {
+				s.UpdatePlayerRanking(b.WinnerID, 0, true)
+			}
+
+			// Update loser
+			var loserID uint
+			if b.WinnerID == b.Player1ID {
+				loserID = b.Player2ID
+			} else {
+				loserID = b.Player1ID
+			}
+
+			if loserID != 0 {
+				s.UpdatePlayerRanking(loserID, 0, false)
+			}
+		}
+	}
+
+	log.Printf("Initial data sync completed. Processed %d players and %d battles.", len(players), len(battles))
 	return nil
 }
 

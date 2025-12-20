@@ -40,6 +40,11 @@ func NewLeaderboardService(redisClient *redis.Client) *LeaderboardService {
 
 // UpdatePlayerScore updates a player's score with threshold checking
 func (s *LeaderboardService) UpdatePlayerScore(playerID uint, combatPower int64) error {
+	// If combat power is 0 or less, remove from leaderboard
+	if combatPower <= 0 {
+		return s.redis.ZRem(s.ctx, LeaderboardKey, fmt.Sprintf("%d", playerID)).Err()
+	}
+
 	// Get current threshold
 	threshold, err := s.GetThreshold()
 	if err != nil {

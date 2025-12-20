@@ -14,6 +14,7 @@ type Config struct {
 	ServicePort      string
 	ConsulAddr       string
 	PlayerServiceURL string
+	BattleServiceURL string
 }
 
 func LoadConfig() *Config {
@@ -29,6 +30,7 @@ func LoadConfig() *Config {
 		ServicePort:      getEnv("SERVICE_PORT", "8004"),
 		ConsulAddr:       getEnv("CONSUL_ADDR", "consul:8500"),
 		PlayerServiceURL: getEnv("PLAYER_SERVICE_URL", "http://player-service:8001"),
+		BattleServiceURL: getEnv("BATTLE_SERVICE_URL", "http://battle-service:8003"),
 	}
 }
 

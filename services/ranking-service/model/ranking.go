@@ -63,3 +63,11 @@ type PowerUpdateEvent struct {
 	IsWin       bool      `json:"is_win"`
 	Timestamp   time.Time `json:"timestamp"`
 }
+
+type Battle struct {
+	ID        uint   `json:"id"`
+	Player1ID uint   `json:"player1_id"`
+	Player2ID uint   `json:"player2_id"`
+	WinnerID  uint   `json:"winner_id"`
+	Status    string `json:"status"`
+}

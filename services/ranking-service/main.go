@@ -34,8 +34,9 @@ func main() {
 
 	rankingRepo := repository.NewRankingRepository(db)
 	playerClient := service.NewPlayerClient(cfg.PlayerServiceURL)
+	battleClient := service.NewBattleClient(cfg.BattleServiceURL)
 	leaderboardService := service.NewLeaderboardService(redisClient)
-	rankingService := service.NewRankingService(rankingRepo, playerClient, leaderboardService)
+	rankingService := service.NewRankingService(rankingRepo, playerClient, battleClient, leaderboardService)
 
 	// Initialize service discovery
 	serviceDiscovery := service.NewServiceDiscovery(consulClient)

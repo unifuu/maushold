@@ -44,6 +44,7 @@ SELECT
     updated_at,
     ROW_NUMBER() OVER (ORDER BY combat_power DESC, id ASC) as rank
 FROM player_rankings
+WHERE total_points > 0
 ORDER BY combat_power DESC, id ASC
 LIMIT 10000;
 

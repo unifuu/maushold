@@ -75,7 +75,7 @@ func (r *rankingRepository) FindTopN(limit int) ([]model.PlayerRanking, error) {
 
 func (r *rankingRepository) FindTopNByCombatPower(limit int) ([]model.PlayerRanking, error) {
 	var rankings []model.PlayerRanking
-	err := r.db.Order("combat_power DESC, id ASC").Limit(limit).Find(&rankings).Error
+	err := r.db.Where("total_points > 0").Order("combat_power DESC, id ASC").Limit(limit).Find(&rankings).Error
 	return rankings, err
 }
 
