@@ -30,14 +30,13 @@ func InitRabbitMQ(cfg *Config) (*amqp.Connection, *amqp.Channel) {
 		log.Fatal("Failed to open channel:", err)
 	}
 
-	// Declare OUR exchange (player.events)
+	// Declare player.events exchange
 	err = ch.ExchangeDeclare("player.events", "topic", true, false, false, false, nil)
 	if err != nil {
 		log.Fatal("Failed to declare player.events exchange:", err)
 	}
 
-	// Declare battle.events exchange (so we can bind to it)
-	// This is idempotent - if battle-service already created it, this is fine
+	// Declare battle.events exchange
 	err = ch.ExchangeDeclare("battle.events", "topic", true, false, false, false, nil)
 	if err != nil {
 		log.Printf("Warning: Failed to declare battle.events exchange: %v", err)
@@ -49,7 +48,7 @@ func InitRabbitMQ(cfg *Config) (*amqp.Connection, *amqp.Channel) {
 		log.Fatal("Failed to declare queue:", err)
 	}
 
-	// Bind queue to battle events (safe now that exchange exists)
+	// Bind queue to battle events
 	err = ch.QueueBind("ranking.updates", "battle.completed", "battle.events", false, nil)
 	if err != nil {
 		log.Printf("Warning: Failed to bind queue (will retry later): %v", err)

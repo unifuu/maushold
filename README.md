@@ -13,6 +13,7 @@ Tryna make a microservices demo.
 ├── frontend/
 |   ├── maushold-react/
 ├── docker-compose.yml
+├── Makefile
 ```
 
 ## Build
@@ -20,6 +21,6 @@ Tryna make a microservices demo.
 ``` bash
 make setup
 make dev
-make clear  # Clear all data
+make clear  # Clear all PostgresSQL data
 make seed   # Generate seed data
 ```
