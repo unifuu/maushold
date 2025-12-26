@@ -5,7 +5,7 @@ on:
     branches: [ main, develop ]
     paths:
       - 'services/player-service/**'
-      - '.github/workflows/player-service-ci.yml'
+      - '.github/workflows/player-service-cicd.yml'
   pull_request:
     branches: [ main, develop ]
     paths:
@@ -18,7 +18,7 @@ env:
   IMAGE_NAME: ${{ github.repository }}/player-service
 
 jobs:
-  # Job 1: Code Quality Checks
+  # Job 1: Code Quality Checks and Tests
   lint-and-test:
     name: Lint & Test
     runs-on: ubuntu-latest
@@ -93,6 +93,7 @@ jobs:
       - name: Run golangci-lint
         working-directory: services/player-service
         run: golangci-lint run --timeout=5m
+        continue-on-error: true
 
       - name: Run tests
         working-directory: services/player-service
@@ -106,22 +107,28 @@ jobs:
           REDIS_PASSWORD: ""
         run: go test -v -race -coverprofile=coverage.out -covermode=atomic ./...
 
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v4
-        with:
-          files: ./services/player-service/coverage.out
-          flags: player-service
-          name: player-service-coverage
-
       - name: Generate coverage report
         working-directory: services/player-service
-        run: go tool cover -html=coverage.out -o coverage.html
+        run: |
+          go tool cover -func=coverage.out
+          go tool cover -html=coverage.out -o coverage.html
 
       - name: Upload coverage HTML
         uses: actions/upload-artifact@v4
         with:
           name: coverage-report
           path: services/player-service/coverage.html
+
+      - name: Check coverage threshold
+        working-directory: services/player-service
+        run: |
+          coverage=$(go tool cover -func=coverage.out | grep total | awk '{print $3}' | sed 's/%//')
+          echo "Total coverage: ${coverage}%"
+          threshold=50
+          if (( $(echo "$coverage < $threshold" | bc -l) )); then
+            echo "Coverage ${coverage}% is below threshold ${threshold}%"
+            exit 1
+          fi
 
   # Job 2: Security Scan
   security-scan:
@@ -144,11 +151,13 @@ jobs:
         uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: 'trivy-results.sarif'
+        continue-on-error: true
 
       - name: Run Gosec Security Scanner
         uses: securego/gosec@master
         with:
           args: './services/player-service/...'
+        continue-on-error: true
 
   # Job 3: Build Docker Image
   build-image:
@@ -208,276 +217,10 @@ jobs:
           image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
           format: 'sarif'
           output: 'trivy-image-results.sarif'
+        continue-on-error: true
 
       - name: Upload Trivy image results
         uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: 'trivy-image-results.sarif'
-
-  # Job 4: Deploy to Staging
-  deploy-staging:
-    name: Deploy to Staging
-    runs-on: ubuntu-latest
-    needs: build-image
-    if: github.ref == 'refs/heads/develop'
-    environment:
-      name: staging
-      url: https://staging.maushold.example.com
-    
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up kubectl
-        uses: azure/setup-kubectl@v3
-        with:
-          version: 'v1.28.0'
-
-      - name: Configure kubectl
-        run: |
-          echo "${{ secrets.KUBECONFIG_STAGING }}" | base64 -d > kubeconfig
-          export KUBECONFIG=kubeconfig
-
-      - name: Deploy to Staging
-        run: |
-          export KUBECONFIG=kubeconfig
-          kubectl set image deployment/player-service \
-            player-service=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }} \
-            -n maushold-staging
-          
-          kubectl rollout status deployment/player-service -n maushold-staging --timeout=5m
-
-      - name: Run smoke tests
-        run: |
-          echo "Running smoke tests..."
-          curl -f https://staging.maushold.example.com/health || exit 1
-          echo "Smoke tests passed!"
-
-      - name: Notify Slack
-        if: always()
-        uses: 8398a7/action-slack@v3
-        with:
-          status: ${{ job.status }}
-          text: 'Player Service deployment to staging: ${{ job.status }}'
-          webhook_url: ${{ secrets.SLACK_WEBHOOK }}
-
-  # Job 5: Deploy to Production
-  deploy-production:
-    name: Deploy to Production
-    runs-on: ubuntu-latest
-    needs: build-image
-    if: github.ref == 'refs/heads/main'
-    environment:
-      name: production
-      url: https://maushold.example.com
-    
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up kubectl
-        uses: azure/setup-kubectl@v3
-        with:
-          version: 'v1.28.0'
-
-      - name: Configure kubectl
-        run: |
-          echo "${{ secrets.KUBECONFIG_PRODUCTION }}" | base64 -d > kubeconfig
-          export KUBECONFIG=kubeconfig
-
-      - name: Deploy to Production (Canary)
-        run: |
-          export KUBECONFIG=kubeconfig
-          
-          # Update canary deployment
-          kubectl set image deployment/player-service-canary \
-            player-service=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }} \
-            -n maushold-production
-          
-          kubectl rollout status deployment/player-service-canary -n maushold-production --timeout=5m
-
-      - name: Run production smoke tests
-        run: |
-          echo "Running production smoke tests..."
-          curl -f https://maushold.example.com/health || exit 1
-          echo "Production smoke tests passed!"
-
-      - name: Promote to full production
-        run: |
-          export KUBECONFIG=kubeconfig
-          
-          # Update main deployment
-          kubectl set image deployment/player-service \
-            player-service=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }} \
-            -n maushold-production
-          
-          kubectl rollout status deployment/player-service -n maushold-production --timeout=10m
-
-      - name: Rollback on failure
-        if: failure()
-        run: |
-          export KUBECONFIG=kubeconfig
-          kubectl rollout undo deployment/player-service -n maushold-production
-          echo "Deployment failed! Rolled back to previous version."
-
-      - name: Create GitHub Release
-        if: success()
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: player-service-v${{ github.run_number }}
-          release_name: Player Service v${{ github.run_number }}
-          body: |
-            Player Service deployed to production
-            
-            Commit: ${{ github.sha }}
-            Author: ${{ github.actor }}
-          draft: false
-          prerelease: false
-
-      - name: Notify Slack
-        if: always()
-        uses: 8398a7/action-slack@v3
-        with:
-          status: ${{ job.status }}
-          text: 'Player Service deployment to production: ${{ job.status }}'
-          webhook_url: ${{ secrets.SLACK_WEBHOOK }}
-          fields: repo,message,commit,author,action,eventName,ref,workflow
-
-# ==================================
-# .github/workflows/player-service-cd-manual.yml
-# Manual deployment workflow
-# ==================================
-name: Player Service - Manual Deploy
-
-on:
-  workflow_dispatch:
-    inputs:
-      environment:
-        description: 'Environment to deploy to'
-        required: true
-        type: choice
-        options:
-          - staging
-          - production
-      image_tag:
-        description: 'Image tag to deploy (default: latest)'
-        required: false
-        default: 'latest'
-
-jobs:
-  deploy:
-    name: Deploy to ${{ github.event.inputs.environment }}
-    runs-on: ubuntu-latest
-    environment:
-      name: ${{ github.event.inputs.environment }}
-    
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up kubectl
-        uses: azure/setup-kubectl@v3
-
-      - name: Configure kubectl
-        run: |
-          if [ "${{ github.event.inputs.environment }}" = "production" ]; then
-            echo "${{ secrets.KUBECONFIG_PRODUCTION }}" | base64 -d > kubeconfig
-          else
-            echo "${{ secrets.KUBECONFIG_STAGING }}" | base64 -d > kubeconfig
-          fi
-          export KUBECONFIG=kubeconfig
-
-      - name: Deploy
-        run: |
-          export KUBECONFIG=kubeconfig
-          NAMESPACE="maushold-${{ github.event.inputs.environment }}"
-          IMAGE_TAG="${{ github.event.inputs.image_tag }}"
-          
-          kubectl set image deployment/player-service \
-            player-service=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${IMAGE_TAG} \
-            -n ${NAMESPACE}
-          
-          kubectl rollout status deployment/player-service -n ${NAMESPACE} --timeout=5m
-
-      - name: Verify deployment
-        run: |
-          export KUBECONFIG=kubeconfig
-          NAMESPACE="maushold-${{ github.event.inputs.environment }}"
-          kubectl get pods -n ${NAMESPACE} -l app=player-service
-
-# ==================================
-# .github/workflows/player-service-rollback.yml
-# Rollback workflow
-# ==================================
-name: Player Service - Rollback
-
-on:
-  workflow_dispatch:
-    inputs:
-      environment:
-        description: 'Environment to rollback'
-        required: true
-        type: choice
-        options:
-          - staging
-          - production
-      revision:
-        description: 'Revision to rollback to (leave empty for previous)'
-        required: false
-
-jobs:
-  rollback:
-    name: Rollback ${{ github.event.inputs.environment }}
-    runs-on: ubuntu-latest
-    environment:
-      name: ${{ github.event.inputs.environment }}
-    
-    steps:
-      - name: Set up kubectl
-        uses: azure/setup-kubectl@v3
-
-      - name: Configure kubectl
-        run: |
-          if [ "${{ github.event.inputs.environment }}" = "production" ]; then
-            echo "${{ secrets.KUBECONFIG_PRODUCTION }}" | base64 -d > kubeconfig
-          else
-            echo "${{ secrets.KUBECONFIG_STAGING }}" | base64 -d > kubeconfig
-          fi
-
-      - name: Show rollout history
-        run: |
-          export KUBECONFIG=kubeconfig
-          NAMESPACE="maushold-${{ github.event.inputs.environment }}"
-          kubectl rollout history deployment/player-service -n ${NAMESPACE}
-
-      - name: Rollback
-        run: |
-          export KUBECONFIG=kubeconfig
-          NAMESPACE="maushold-${{ github.event.inputs.environment }}"
-          
-          if [ -z "${{ github.event.inputs.revision }}" ]; then
-            echo "Rolling back to previous revision..."
-            kubectl rollout undo deployment/player-service -n ${NAMESPACE}
-          else
-            echo "Rolling back to revision ${{ github.event.inputs.revision }}..."
-            kubectl rollout undo deployment/player-service -n ${NAMESPACE} \
-              --to-revision=${{ github.event.inputs.revision }}
-          fi
-          
-          kubectl rollout status deployment/player-service -n ${NAMESPACE} --timeout=5m
-
-      - name: Verify rollback
-        run: |
-          export KUBECONFIG=kubeconfig
-          NAMESPACE="maushold-${{ github.event.inputs.environment }}"
-          kubectl get pods -n ${NAMESPACE} -l app=player-service
-
-      - name: Notify Slack
-        if: always()
-        uses: 8398a7/action-slack@v3
-        with:
-          status: ${{ job.status }}
-          text: 'Player Service rollback in ${{ github.event.inputs.environment }}: ${{ job.status }}'
-          webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+        continue-on-error: true

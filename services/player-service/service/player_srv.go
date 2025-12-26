@@ -14,6 +14,13 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+// RedisClient interface for testing
+type RedisClient interface {
+	Get(ctx context.Context, key string) *redis.StringCmd
+	Set(ctx context.Context, key string, value interface{}, expiration time.Duration) *redis.StatusCmd
+	Del(ctx context.Context, keys ...string) *redis.IntCmd
+}
+
 type PlayerService interface {
 	CreatePlayer(player *model.Player) error
 	GetPlayer(id uint) (*model.Player, error)
@@ -26,11 +33,11 @@ type PlayerService interface {
 
 type playerService struct {
 	repo  repository.PlayerRepository
-	redis *redis.Client
+	redis RedisClient
 	ctx   context.Context
 }
 
-func NewPlayerService(repo repository.PlayerRepository, redisClient *redis.Client) PlayerService {
+func NewPlayerService(repo repository.PlayerRepository, redisClient RedisClient) PlayerService {
 	return &playerService{
 		repo:  repo,
 		redis: redisClient,
